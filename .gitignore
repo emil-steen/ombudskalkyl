@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+*.log
+scratch/
+test_logo.svg
+full_muf_logo.svg
