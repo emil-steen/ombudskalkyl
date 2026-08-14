@@ -1,5 +1,5 @@
 # Ombudsfördelningskalkylator
-> **Officiell röstlängds- och mandatkalkylator för Moderata Ungdomsförbundet (MUF), Moderat Skolungdom (MSU) och Moderata Studenter (MST).**
+> **Inofficiell röstlängds- och mandatkalkylator för Moderata Ungdomsförbundet (MUF), Moderat Skolungdom (MSU) och Moderata Studenter (MST).**
 
 [![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-005EA8?style=flat-square&logo=github)](https://emil-steen.github.io/ombudskalkyl/)
 [![Metod](https://img.shields.io/badge/Algoritm-Websters%20heltalsmetod-0EA5E9?style=flat-square)](https://sv.wikipedia.org/wiki/Sainte-Lagu%C3%ABs_metod)
@@ -108,4 +108,4 @@ ombudskalkyl/
 
 ## ⚖️ Licens & Rättigheter
 
-Utvecklad för **Moderata Ungdomsförbundet**. Fri att använda och anpassa för interna stämmor och sammankomster.
+Utvecklad för som fristående projekt. Fri att använda och anpassa för interna stämmor och sammankomster.
