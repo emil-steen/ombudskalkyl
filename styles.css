@@ -26,7 +26,7 @@
   /* Ljust Liquid Glass Tema */
   --bg-base: #f0f4f8;
   --bg-glass: rgba(255, 255, 255, 0.82);
-  --bg-glass-elevated: rgba(255, 255, 255, 0.94);
+  --bg-glass-elevated: rgba(255, 255, 255, 0.95);
   --bg-glass-subtle: rgba(255, 255, 255, 0.55);
   --bg-hover: rgba(0, 46, 84, 0.04);
   --bg-active: rgba(0, 46, 84, 0.08);
@@ -124,9 +124,10 @@ html, body {
 }
 
 .app-container {
-  max-width: 1320px;
+  max-width: 1400px;
+  width: 96%;
   margin: 0 auto;
-  padding: 28px 24px 80px 24px;
+  padding: 24px 12px 80px 12px;
 }
 
 /* ==========================================================================
@@ -140,7 +141,7 @@ html, body {
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-glass-md), var(--glass-inner-specular);
   border-radius: var(--radius-xl);
-  padding: 22px 28px 18px 28px;
+  padding: 20px 28px 18px 28px;
   margin-bottom: 24px;
   display: flex;
   flex-direction: column;
@@ -153,46 +154,45 @@ html, body {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
 }
 
 .brand-container {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 
 .muf-logo-wrapper {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   cursor: default;
   user-select: none;
 }
 
 .muf-official-logo {
-  height: 42px;
+  height: 40px;
   width: auto;
   display: block;
 }
 
-.muf-letters-path {
-  fill: var(--muf-logo-symbol-color);
-  transition: fill 0.25s ease;
+.muf-symbol-paths {
+  color: var(--muf-logo-symbol-color);
+  transition: color 0.25s ease;
 }
 
-.muf-wordmark-text {
-  fill: var(--muf-logo-text-color);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Arial Black", sans-serif;
-  font-size: 25px;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  transition: fill 0.25s ease;
+.muf-text-labels {
+  color: var(--muf-logo-text-color);
+  transition: color 0.25s ease;
 }
 
 .brand-divider {
   width: 1px;
   height: 38px;
   background: var(--glass-border-subtle);
+  flex-shrink: 0;
 }
 
 .brand-tool-info {
@@ -210,10 +210,10 @@ html, body {
 }
 
 .brand-app-tag {
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 650;
   color: var(--text-muted);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -221,6 +221,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: auto;
 }
 
 /* ==========================================================================
@@ -322,7 +323,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 8px 15px;
   border-radius: var(--radius-pill);
   font-family: var(--font-system);
   font-size: 13px;
@@ -474,20 +475,12 @@ html, body {
 }
 
 /* ==========================================================================
-   Huvudvy: Layout & Cards (Liquid Glass)
+   Fullbredds Huvudtabell (Liquid Glass Look)
    ========================================================================== */
 
-.main-content-layout {
-  display: grid;
-  grid-template-columns: 1fr 370px;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 1080px) {
-  .main-content-layout {
-    grid-template-columns: 1fr;
-  }
+.full-width-section {
+  width: 100%;
+  margin-bottom: 24px;
 }
 
 .content-card {
@@ -501,7 +494,7 @@ html, body {
 }
 
 .card-header-bar {
-  padding: 18px 24px;
+  padding: 16px 24px;
   border-bottom: 1px solid var(--glass-border-subtle);
   display: flex;
   align-items: center;
@@ -542,7 +535,7 @@ html, body {
   backdrop-filter: blur(12px);
   color: var(--text-primary);
   outline: none;
-  width: 170px;
+  width: 160px;
   transition: all 0.2s ease;
 }
 
@@ -550,7 +543,7 @@ html, body {
   border-color: var(--muf-cyan);
   background: var(--bg-glass-elevated);
   box-shadow: 0 0 0 3px rgba(100, 193, 236, 0.2);
-  width: 210px;
+  width: 200px;
 }
 
 .search-icon-svg {
@@ -562,12 +555,8 @@ html, body {
   pointer-events: none;
 }
 
-/* ==========================================================================
-   Tabell (Liquid Glass Look)
-   ========================================================================== */
-
 .table-responsive-container {
-  max-height: 620px;
+  max-height: 600px;
   overflow-y: auto;
   overflow-x: auto;
 }
@@ -611,7 +600,7 @@ html, body {
 }
 
 .calc-table td {
-  padding: 10px 14px;
+  padding: 9px 14px;
   border-bottom: 1px solid var(--glass-border-subtle);
   color: var(--text-primary);
   vertical-align: middle;
@@ -640,8 +629,8 @@ html, body {
 }
 
 .inline-input-members {
-  width: 90px;
-  padding: 5px 10px;
+  width: 85px;
+  padding: 4px 8px;
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
@@ -665,8 +654,8 @@ html, body {
   align-items: center;
   justify-content: center;
   min-width: 32px;
-  height: 28px;
-  padding: 0 9px;
+  height: 26px;
+  padding: 0 8px;
   border-radius: var(--radius-pill);
   background: rgba(0, 94, 168, 0.1);
   color: var(--muf-blue-primary);
@@ -714,20 +703,27 @@ html, body {
 }
 
 .calc-table tfoot td {
-  padding: 14px;
+  padding: 12px 14px;
   border-top: 2px solid var(--glass-border-subtle);
   border-bottom: none;
   font-size: 13.5px;
 }
 
 /* ==========================================================================
-   Sidopanel (Glass Cards)
+   Undre Layout: Parametrar + Marginaler + Plenum
    ========================================================================== */
 
-.sidebar-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.lower-grid-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .lower-grid-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .panel-card {
@@ -736,7 +732,7 @@ html, body {
   -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  padding: 20px;
+  padding: 20px 24px;
   box-shadow: var(--shadow-glass-md), var(--glass-inner-specular);
 }
 
@@ -786,11 +782,17 @@ html, body {
   margin-top: 4px;
 }
 
+.sidebar-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .marginal-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 280px;
+  max-height: 240px;
   overflow-y: auto;
 }
 
@@ -798,7 +800,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 12px;
+  padding: 8px 12px;
   background: var(--bg-glass-subtle);
   border: 1px solid var(--glass-border-subtle);
   border-radius: var(--radius-md);
@@ -832,14 +834,13 @@ html, body {
    Plenisal Visualisering
    ========================================================================== */
 
-.plenum-visualizer-container {
-  margin-top: 24px;
+.plenum-visualizer-card {
   background: var(--bg-glass);
   backdrop-filter: blur(var(--blur-amount)) saturate(180%);
   -webkit-backdrop-filter: blur(var(--blur-amount)) saturate(180%);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  padding: 24px;
+  padding: 20px 24px;
   box-shadow: var(--shadow-glass-md), var(--glass-inner-specular);
 }
 
@@ -848,8 +849,8 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 0;
-  min-height: 260px;
+  padding: 10px 0;
+  min-height: 240px;
 }
 
 .plenum-svg {
@@ -873,8 +874,8 @@ html, body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
   border-top: 1px solid var(--glass-border-subtle);
 }
 
@@ -1046,8 +1047,7 @@ html, body {
   .app-header,
   .nav-section,
   .card-actions,
-  .sidebar-stack,
-  .plenum-visualizer-container,
+  .lower-grid-layout,
   .modal-backdrop,
   .toast-container,
   .btn,
@@ -1061,8 +1061,8 @@ html, body {
     margin: 0 !important;
   }
 
-  .main-content-layout {
-    display: block !important;
+  .full-width-section {
+    margin: 0 !important;
   }
 
   .content-card {
