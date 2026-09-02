@@ -12,6 +12,1253 @@
 
   <!-- Force clear legacy Service Workers and caches -->
   <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (var r of regs) { r.unregister(); }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { caches.delete(k); });
+      });
+    }
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      document.documentElement.removeAttribute('data-theme');
+    } catch(e) {}
+  </script>
+
+  <!-- Favicon / Apple Web App -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002e54'/><text x='50' y='68' font-size='50' font-weight='bold' fill='%2364c1ec' text-anchor='middle' font-family='sans-serif'>MUF</text></svg>" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23002e54'/><text x='50' y='68' font-size='50' font-weight='bold' fill='%2364c1ec' text-anchor='middle' font-family='sans-serif'>MUF</text></svg>" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mblue: {
+              50: '#f0f6fc',
+              100: '#dceaf7',
+              200: '#bad7f1',
+              300: '#86bee8',
+              400: '#4aa0dd',
+              500: '#005ea2',
+              600: '#004c85',
+              700: '#003866',
+              800: '#002647',
+              900: '#001a33',
+            },
+            muf: {
+              navy: '#002e54',
+              blue: '#005ea8',
+              cyan: '#64c1ec',
+            }
+          },
+          fontFamily: {
+            sans: [
+              '-apple-system',
+              'BlinkMacSystemFont',
+              '"SF Pro Display"',
+              '"SF Pro Text"',
+              'system-ui',
+              'Inter',
+              'sans-serif'
+            ],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+/* ==========================================================================
+   MUF Ombudsfördelningskalkylator – Apple Liquid Glass Design System
+   Baserat på designtemat i riksdag26 (Tailwind CDN, Lucide Icons, Glassmorphism)
+   ========================================================================== */
+
+/* Tabular figures across all numbers */
+.tabular-nums, input[type=number], .font-mono, #stat-total-members, #stat-total-ombud, #stat-divisor {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "cv02" 1, "cv03" 1;
+}
+
+/* Ambient Chromatic Mesh Background (GPU Isolated & High-FPS) */
+.ambient-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events-none;
+  z-index: 0;
+  overflow: hidden;
+  contain: strict;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.ambient-orb-1, .ambient-orb-2, .ambient-orb-3, .ambient-orb-4, .ambient-orb-5 {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(28px);
+  will-change: transform;
+  transform: translateZ(0);
+  pointer-events-none;
+}
+
+.ambient-orb-1 {
+  top: -12%;
+  right: -8%;
+  width: 680px;
+  height: 680px;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 94, 168, 0.35) 0%, rgba(100, 193, 236, 0.20) 42%, rgba(238, 244, 251, 0) 72%);
+  animation: driftOrb1 26s ease-in-out infinite alternate;
+}
+
+.ambient-orb-2 {
+  top: 20%;
+  left: -15%;
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle at 50% 50%, rgba(2, 132, 199, 0.28) 0%, rgba(56, 189, 248, 0.15) 42%, rgba(238, 244, 251, 0) 72%);
+  animation: driftOrb2 30s ease-in-out infinite alternate;
+}
+
+.ambient-orb-3 {
+  top: 48%;
+  right: -12%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.22) 0%, rgba(245, 158, 11, 0.12) 45%, rgba(238, 244, 251, 0) 72%);
+  animation: driftOrb3 28s ease-in-out infinite alternate;
+}
+
+.ambient-orb-4 {
+  bottom: 12%;
+  left: -10%;
+  width: 580px;
+  height: 580px;
+  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.24) 0%, rgba(52, 211, 153, 0.12) 42%, rgba(238, 244, 251, 0) 72%);
+  animation: driftOrb4 32s ease-in-out infinite alternate;
+}
+
+.ambient-orb-5 {
+  bottom: -15%;
+  right: 12%;
+  width: 580px;
+  height: 580px;
+  background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.24) 0%, rgba(96, 165, 250, 0.12) 42%, rgba(238, 244, 251, 0) 72%);
+  animation: driftOrb5 34s ease-in-out infinite alternate;
+}
+
+@keyframes driftOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-45px, 35px) scale(1.08); }
+}
+@keyframes driftOrb2 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, -25px) scale(1.07); }
+}
+@keyframes driftOrb3 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-35px, -35px) scale(1.06); }
+}
+@keyframes driftOrb4 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(40px, 30px) scale(1.08); }
+}
+@keyframes driftOrb5 {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-30px, 25px) scale(1.05); }
+}
+
+/* ==========================================================================
+   Apple Liquid Glass Material System (60fps Scroll Optimized)
+   ========================================================================== */
+
+.apple-glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 20px 40px -12px rgba(0, 35, 75, 0.07),
+    0 1px 2px 0 rgba(0, 0, 0, 0.02),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(0, 30, 60, 0.02);
+  border-radius: 32px;
+  transform: translateZ(0);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.apple-glass-card:hover {
+  box-shadow:
+    0 24px 48px -12px rgba(0, 35, 75, 0.09),
+    0 1px 3px 0 rgba(0, 0, 0, 0.03),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(0, 30, 60, 0.02);
+}
+
+/* Inre element ligger redan ovanpå frostat glas - kräver ej dubbel blur */
+.apple-glass-inner {
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 2px 8px -2px rgba(0, 35, 75, 0.03),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+}
+
+.apple-glass-pill {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 2px 6px -1px rgba(0, 30, 70, 0.04),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  border-radius: 9999px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-glass-pill:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+}
+
+.apple-glass-pill:active {
+  transform: scale(0.96);
+}
+
+/* VisionOS Specular Highlight */
+.apple-hero-specular {
+  position: relative;
+  background: linear-gradient(135deg, rgba(240, 247, 255, 0.85) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(230, 244, 255, 0.8) 100%);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1.5px solid rgba(0, 94, 168, 0.28);
+  box-shadow:
+    0 14px 32px -6px rgba(0, 94, 168, 0.12),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 2px 0 rgba(0, 94, 168, 0.05);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.apple-hero-specular::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+}
+
+/* Segmented Control Buttons (Apple Pills) */
+.apple-seg-btn {
+  position: relative;
+  border-radius: 9999px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  background: transparent;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.apple-seg-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.apple-seg-btn:active {
+  transform: scale(0.96);
+}
+
+.apple-seg-btn.active {
+  background: rgba(255, 255, 255, 0.95);
+  color: #003866;
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 3px 10px -1px rgba(0, 45, 95, 0.08), 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Stepper +/- button */
+.apple-stepper-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.apple-stepper-btn:hover {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.apple-stepper-btn:active {
+  transform: scale(0.88);
+  background: #f1f5f9;
+}
+
+/* ==========================================================================
+   Tabell- och formulärstyling (Apple Liquid Glass)
+   ========================================================================== */
+
+.calc-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.calc-table thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid rgba(0, 45, 95, 0.08);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: #475569;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+  z-index: 10;
+}
+
+.calc-table thead th:hover {
+  color: #005ea8;
+}
+
+.calc-table thead th.num {
+  text-align: right;
+}
+
+.calc-table tbody tr {
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid rgba(0, 35, 75, 0.04);
+}
+
+.calc-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.65);
+}
+
+.calc-table td {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(0, 35, 75, 0.04);
+}
+
+.calc-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.unit-rank {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  display: inline-block;
+  width: 22px;
+  text-align: center;
+}
+
+.unit-name-text {
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+  border-radius: 4px;
+  padding: 2px 4px;
+  transition: background-color 0.15s ease;
+}
+
+.unit-name-text:focus {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 2px #005ea8;
+}
+
+.inline-input-members {
+  width: 84px;
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 45, 95, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.15s ease;
+}
+
+.inline-input-members:focus {
+  background: #ffffff;
+  border-color: #005ea8;
+  box-shadow: 0 0 0 3px rgba(0, 94, 168, 0.18);
+  outline: none;
+}
+
+.ombud-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #005ea8 0%, #004780 100%);
+  box-shadow: 0 2px 6px rgba(0, 94, 168, 0.25);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.status-badge.kvot {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-badge.grundmandat {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.status-badge.sparr {
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.calc-table tfoot {
+  position: sticky;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -4px 16px rgba(0, 30, 70, 0.05);
+  font-weight: 700;
+  z-index: 10;
+}
+
+.calc-table tfoot td {
+  padding: 12px 14px;
+  border-top: 2px solid rgba(0, 45, 95, 0.08);
+  border-bottom: none;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+/* Marginal Ranking Item */
+.marginal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 30, 70, 0.03);
+  transition: background 0.15s ease;
+}
+
+.marginal-item:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.marginal-district {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.marginal-diff {
+  font-size: 12px;
+  font-weight: 700;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.10);
+  border: 1px solid rgba(5, 150, 105, 0.20);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* Falang- och Majoritetsbyggare (Apple Liquid Glass) */
+.faction-progress-bar {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  background: rgba(0, 30, 60, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.faction-progress-segment {
+  height: 100%;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: inherit;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.majority-marker-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: #0f172a;
+  z-index: 10;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.95);
+}
+
+.faction-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 4px 14px -2px rgba(0, 30, 70, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faction-card.has-majority {
+  border-color: rgba(16, 185, 129, 0.6);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(236, 253, 245, 0.75) 100%);
+  box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.15), inset 0 1px 1px rgba(255, 255, 255, 1);
+}
+
+/* Drag-and-Drop Stämmobyggare (SVT Regeringsbyggar-stil) */
+.district-drag-chip {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.district-drag-chip:active {
+  cursor: grabbing;
+}
+
+.district-drag-chip.dragging {
+  opacity: 0.35;
+  transform: scale(0.92);
+}
+
+.drop-zone {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drop-zone.drag-over {
+  border-color: #005ea8 !important;
+  background-color: rgba(0, 94, 168, 0.10) !important;
+  transform: scale(1.015);
+  box-shadow: 0 8px 24px -4px rgba(0, 94, 168, 0.15);
+}
+
+.drop-zone.drag-over-amber {
+  border-color: #d97706 !important;
+  background-color: rgba(217, 119, 6, 0.10) !important;
+  transform: scale(1.015);
+  box-shadow: 0 8px 24px -4px rgba(217, 119, 6, 0.15);
+}
+
+.quick-move-btn {
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.quick-move-btn:active {
+  transform: scale(0.85);
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+/* ==========================================================================
+   Print & Protokoll Media Query
+   ========================================================================== */
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif !important;
+    padding: 0 !important;
+  }
+
+  .ambient-canvas,
+  header,
+  .no-print,
+  #toast,
+  .btn,
+  .apple-seg-btn,
+  .apple-stepper-btn,
+  #table-search-input,
+  .lower-grid-layout,
+  footer {
+    display: none !important;
+  }
+
+  .apple-glass-card,
+  .apple-glass-inner {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #002e54;
+    padding-bottom: 12px;
+  }
+
+  .print-title {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #002e54;
+  }
+
+  .print-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 10pt;
+    color: #334155;
+  }
+
+  .calc-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .calc-table th,
+  .calc-table td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    font-size: 9pt !important;
+    color: #000000 !important;
+  }
+
+  .calc-table th {
+    background-color: #f1f5f9 !important;
+    font-weight: bold !important;
+  }
+
+  .inline-input-members {
+    border: none !important;
+    background: transparent !important;
+    text-align: right !important;
+    font-weight: bold !important;
+  }
+
+  .ombud-badge {
+    background: none !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+    box-shadow: none !important;
+  }
+
+  .print-signatures {
+    display: block !important;
+    margin-top: 40px;
+    page-break-inside: avoid;
+  }
+
+  .sig-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 45px;
+  }
+
+  .sig-line {
+    border-top: 1px solid #000000;
+    padding-top: 6px;
+    font-size: 9pt;
+  }
+}
+
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 pt-4 pb-20 relative overflow-x-hidden">
+
+  <!-- Ambient Chromatic Mesh Background (GPU Isolated & High-FPS) -->
+  <div class="ambient-canvas">
+    <div class="ambient-orb-1"></div>
+    <div class="ambient-orb-2"></div>
+    <div class="ambient-orb-3"></div>
+    <div class="ambient-orb-4"></div>
+    <div class="ambient-orb-5"></div>
+  </div>
+
+  <!-- Toast Notification (Apple Glass Pill) -->
+  <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform -translate-y-24 opacity-0 pointer-events-none">
+    <div class="apple-glass-pill text-slate-900 text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 border border-white/90">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+      <span id="toast-message">Länk kopierad till urklipp</span>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 space-y-6 relative z-10">
+
+    <!-- Utskriftsrubrik (Visas enbart vid utskrift/PDF) -->
+    <div class="print-only-header hidden">
+      <div class="print-title" id="print-org-title">Officiellt Ombudsfördelningsprotokoll – MUF</div>
+      <div class="text-base font-bold text-mblue-600 mt-1" id="print-assembly">Förbundsstämman</div>
+      <div class="print-meta-grid">
+        <div id="print-date">Skärningsdatum: 31 december</div>
+        <div id="print-divisor">Fastställd Divisor (D): 214.30</div>
+        <div id="print-base-mandate">Grundmandat: Minst 2 ombud</div>
+      </div>
+    </div>
+
+    <!-- Header Card: Official MUF Branding & Actions -->
+    <header class="apple-glass-card p-4 sm:p-5 space-y-4">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Brand info & Logo -->
+        <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+          <div class="flex items-center gap-3">
+            <!-- High Res MUF Logo -->
+            <div class="shrink-0" title="Moderata Ungdomsförbundet">
+              <svg class="h-8 sm:h-9 w-auto" viewBox="0 0 1750 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g fill="#005ea8">
+                  <path d="M560 0C604.183 0 640 35.8172 640 80H576C576 71.1635 568.837 64 560 64C551.163 64 544 71.1635 544 80V128H640V192H544V320H480V80C480 35.8172 515.817 0 560 0Z" />
+                  <path d="M288 0H352V240C352 248.837 359.163 256 368 256C376.837 256 384 248.837 384 240V0H448V240C448 284.183 412.183 320 368 320C323.817 320 288 284.183 288 240V0Z" />
+                  <path d="M80 0C35.8172 0 0 35.8172 0 80V320H64V80C64 71.1634 71.1634 64 80 64C88.8366 64 96 71.1634 96 80V320H160V80C160 71.1634 167.163 64 176 64C184.837 64 192 71.1634 192 80V320H256V80C256 35.8172 220.183 0 176 0C157.99 0 141.371 5.95112 128 15.9941C114.629 5.95112 98.0097 0 80 0Z" />
+                </g>
+                <g fill="#002e54" transform="translate(680, 0)">
+                  <text x="0" y="160" font-family="'Gotham Narrow', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" font-size="115" font-weight="800" letter-spacing="-0.03em">moderata</text>
+                  <text x="0" y="285" font-family="'Gotham Narrow', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" font-size="115" font-weight="800" letter-spacing="-0.03em">ungdomsförbundet</text>
+                </g>
+              </svg>
+            </div>
+            <div class="h-7 w-[1px] bg-slate-300/70 hidden sm:block"></div>
+            <div>
+              <h1 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight leading-tight">Ombudskalkylator</h1>
+              <div class="text-[11px] font-semibold text-mblue-600 flex items-center gap-1">
+                <i data-lucide="scale" class="w-3 h-3"></i> Röstlängdsberäkning
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2">
+            <button id="btn-print-protocol" class="apple-glass-pill px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition active:scale-95 shadow-xs" title="Skriv ut eller spara PDF">
+              <i data-lucide="printer" class="w-3.5 h-3.5 text-mblue-600"></i>
+              <span>Skriv ut protokoll</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segmented Navigation & Info Badges -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1 border-t border-slate-200/50">
+        <!-- Apple Segmented Control for Organisations -->
+        <div class="apple-glass-inner p-1 flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+          <button class="org-tab apple-seg-btn active" data-org="muf">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-mblue-600"></i>
+            <span>MUF Förbundsstämman</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-mblue-50 text-mblue-700 border border-mblue-200/60 ml-0.5">101 ombud</span>
+          </button>
+          <button class="org-tab apple-seg-btn" data-org="msu">
+            <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-sky-600"></i>
+            <span>MSU Skolungdom</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 ml-0.5">51 ombud</span>
+          </button>
+          <button class="org-tab apple-seg-btn" data-org="mst">
+            <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-600"></i>
+            <span>MST Studenter</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 ml-0.5">51 ombud</span>
+          </button>
+          <button class="org-tab apple-seg-btn" data-org="custom">
+            <i data-lucide="sliders" class="w-3.5 h-3.5 text-amber-600"></i>
+            <span>Anpassad Stämma</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 ml-0.5">Flexibel</span>
+          </button>
+        </div>
+
+        <!-- Meta Info Badges -->
+        <div class="flex items-center gap-2 self-start lg:self-auto flex-wrap">
+          <div class="apple-glass-pill px-3 py-1 text-xs font-semibold text-slate-600 flex items-center gap-1.5 border border-white/80 shadow-xs">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-mblue-600"></i>
+            <span>Skärningsdatum: 31 december</span>
+          </div>
+          <div class="apple-glass-pill px-3 py-1 text-xs font-semibold text-slate-600 flex items-center gap-1.5 border border-white/80 shadow-xs">
+            <i data-lucide="calculator" class="w-3.5 h-3.5 text-mblue-600"></i>
+            <span>Websters metod (Sainte-Laguë)</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 4-Column Apple Liquid Glass KPI Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <!-- Card 1: Totala Medlemmar -->
+      <div class="apple-glass-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Totala Medlemmar</span>
+          <div class="w-8 h-8 rounded-full apple-glass-pill text-mblue-600 flex items-center justify-center shrink-0">
+            <i data-lucide="users" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums" id="stat-total-members">19 423</div>
+          <p class="text-[11px] text-slate-500 font-medium mt-0.5">Registrerade & betalande</p>
+        </div>
+      </div>
+
+      <!-- Card 2: Tilldelade Ombud -->
+      <div class="apple-glass-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Tilldelade Ombud</span>
+          <div class="w-8 h-8 rounded-full apple-glass-pill text-emerald-600 flex items-center justify-center shrink-0">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-mblue-600 tabular-nums" id="stat-total-ombud">101</div>
+          <div class="mt-1">
+            <span id="stat-target-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 inline-flex items-center gap-1">
+              <i data-lucide="check" class="w-3 h-3"></i> Exakt ram (101 mål)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Fastställd Divisor (D) -->
+      <div class="apple-glass-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Fastställd Divisor (D)</span>
+          <div class="w-8 h-8 rounded-full apple-glass-pill text-amber-600 flex items-center justify-center shrink-0">
+            <i data-lucide="divide" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums" id="stat-divisor">214.3</div>
+          <p class="text-[11px] text-slate-500 font-medium mt-0.5 tabular-nums" id="stat-divisor-interval">Intervall: 213.80 – 214.80</p>
+        </div>
+      </div>
+
+      <!-- Card 4: Distrikt på grundmandat -->
+      <div class="apple-glass-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">På Grundmandat</span>
+          <div class="w-8 h-8 rounded-full apple-glass-pill text-indigo-600 flex items-center justify-center shrink-0">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums" id="stat-base-mandate-count">9</div>
+          <p class="text-[11px] text-slate-500 font-medium mt-0.5" id="stat-base-mandate-meta">Minst 2 grundmandat per enhet</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Table Card: Full Width & Elegant Apple Glass Design -->
+    <section class="apple-glass-card p-4 sm:p-6 space-y-4">
+      <!-- Card Toolbar -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full apple-glass-pill text-mblue-600 flex items-center justify-center shrink-0">
+            <i data-lucide="table" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900 leading-tight">Distrikts- och Medlemstabell</h2>
+            <p class="text-xs text-slate-500 font-medium">Klicka på medlemsantalet för att simulera förändringar i realtid</p>
+          </div>
+        </div>
+
+        <!-- Table Controls: Search & Actions -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Search input -->
+          <div class="relative w-full sm:w-56">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="table-search-input" class="w-full pl-8 pr-3 py-1.5 rounded-full text-xs font-medium apple-glass-inner text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mblue-500/30" placeholder="Sök enhet..." />
+          </div>
+
+          <button id="btn-add-row" class="apple-glass-pill px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition active:scale-95 shadow-xs" title="Lägg till enhet">
+            <i data-lucide="plus" class="w-3.5 h-3.5 text-mblue-600"></i>
+            <span>Lägg till</span>
+          </button>
+
+          <button id="btn-open-paste" class="apple-glass-pill px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition active:scale-95 shadow-xs" title="Klistra in från Excel">
+            <i data-lucide="clipboard-paste" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Klistra in</span>
+          </button>
+
+          <button id="btn-export-excel" class="apple-glass-pill px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition active:scale-95 shadow-xs" title="Exportera till Excel">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Excel</span>
+          </button>
+
+          <button id="btn-export-csv" class="apple-glass-pill px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition active:scale-95 shadow-xs" title="Exportera till CSV">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-600"></i>
+            <span>CSV</span>
+          </button>
+
+          <button id="btn-copy-tsv" class="apple-glass-pill w-8 h-8 rounded-full text-slate-600 hover:text-slate-900 flex items-center justify-center transition active:scale-95 shadow-xs" title="Kopiera tabell (TSV)">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <button id="btn-reset-data" class="apple-glass-pill w-8 h-8 rounded-full text-slate-500 hover:text-slate-900 flex items-center justify-center transition active:scale-95 shadow-xs" title="Återställ till referensdata">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Scroll Wrapper -->
+      <div class="overflow-x-auto rounded-2xl border border-white/80 apple-glass-inner">
+        <table class="calc-table" id="calc-table">
+          <thead>
+            <tr>
+              <th style="width: 36px;">Nr</th>
+              <th data-sort="name">Distrikt / Förening</th>
+              <th data-sort="members" class="num">Medlemmar</th>
+              <th data-sort="shareMembers" class="num">Andel</th>
+              <th data-sort="rawQuota" class="num" title="Kvot: Medlemmar delat med Divisor">Kvot (M/D)</th>
+              <th data-sort="ombud" class="num" title="Tilldelade ombudsmandat">Ombud</th>
+              <th>Status</th>
+              <th data-sort="neededForNext" class="num" title="Medlemmar som fattades för nästa mandat">Till nästa (+1)</th>
+              <th data-sort="dropMargin" class="num" title="Medlemmar som kan tappas före mandatförlust">Marginal (-1)</th>
+              <th style="width: 44px;"></th>
+            </tr>
+          </thead>
+          <tbody id="calc-table-body">
+            <!-- Dynamically generated rows -->
+          </tbody>
+          <tfoot id="calc-table-foot">
+            <!-- Total summary row -->
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Lower Grid: Parameters & Margins (Left) + Stämmobyggare (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      
+      <!-- Left Column (5 cols): Parameters & Marginal Ranking -->
+      <div class="lg:col-span-5 space-y-5">
+        
+        <!-- Stämmoparametrar Card -->
+        <div class="apple-glass-card p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4 text-mblue-600"></i>
+              Stämmoparametrar
+            </h3>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-mblue-50 text-mblue-700 border border-mblue-200/60">Realtid</span>
+          </div>
+
+          <!-- Target Seats (T) -->
+          <div class="apple-glass-inner p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="param-target-seats" class="text-xs font-bold text-slate-800">Målram ombud (T)</label>
+              <div class="flex items-center gap-1">
+                <button type="button" id="btn-target-dec" class="apple-stepper-btn">-</button>
+                <input type="number" id="param-target-seats" class="w-16 py-1 px-2 text-center rounded-lg border border-slate-200 bg-white/90 font-mono font-bold text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-mblue-500/30" min="1" max="1000" value="101" />
+                <button type="button" id="btn-target-inc" class="apple-stepper-btn">+</button>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium">Totalt antal ombudsmandat som ska fördelas över stämman.</p>
+          </div>
+
+          <!-- Base Seats (min) -->
+          <div class="apple-glass-inner p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="param-min-seats" class="text-xs font-bold text-slate-800">Grundmandat per enhet (min)</label>
+              <div class="flex items-center gap-1">
+                <button type="button" id="btn-min-dec" class="apple-stepper-btn">-</button>
+                <input type="number" id="param-min-seats" class="w-16 py-1 px-2 text-center rounded-lg border border-slate-200 bg-white/90 font-mono font-bold text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-mblue-500/30" min="0" max="10" value="2" />
+                <button type="button" id="btn-min-inc" class="apple-stepper-btn">+</button>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium">Grundmandatsnivå enligt stadgarna (MUF: 2, MSU: 1, MST: 0).</p>
+          </div>
+
+          <div class="text-xs text-slate-600 bg-white/40 p-3 rounded-xl border border-white/60 flex items-start gap-2" id="org-description-text">
+            25 distrikt med minst 2 grundmandat per distrikt.
+          </div>
+        </div>
+
+        <!-- Marginal Ranking Card: Närmast ytterligare mandat -->
+        <div class="apple-glass-card p-5 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
+              Närmast ytterligare mandat
+            </h3>
+            <span class="text-[11px] text-slate-500 font-medium">Topp 6 enheter</span>
+          </div>
+          
+          <div class="space-y-2" id="marginal-ranking-list">
+            <!-- Dynamically rendered marginal items -->
+          </div>
+
+          <p class="text-[11px] text-slate-400 font-medium text-center pt-1">
+            Antal medlemmar som saknades vid skärningsdatumet för att vinna ytterligare ett ombud.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Right Column (7 cols): Stämmobyggaren & Falangduellen (SVT-stil) -->
+      <div class="lg:col-span-7">
+        <div class="apple-glass-card p-5 sm:p-6 space-y-5">
+          
+          <!-- Card Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-full apple-glass-pill text-mblue-600 flex items-center justify-center shrink-0 shadow-xs">
+                <i data-lucide="swords" class="w-4 h-4 text-mblue-600"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 leading-tight">Stämmobyggaren & Falangduellen</h3>
+                <p class="text-xs text-slate-500 font-medium">Dra distrikt till respektive sida för att bygga stämmomajoritet (50% + 1)</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 self-start sm:self-auto">
+              <button id="btn-reset-factions" class="apple-glass-pill px-3 py-1.5 rounded-full text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition active:scale-95 shadow-xs" title="Nollställ alla tilldelningar">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span>Nollställ</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SVT-Style Duel & Majority Battle Bar -->
+          <div class="apple-glass-inner p-4 sm:p-5 space-y-3">
+            <!-- Duel Header Labels: Full Names & Mandate Counts (NO abbreviations!) -->
+            <div class="flex items-center justify-between gap-2">
+              <!-- Left Faction Label -->
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-3.5 h-3.5 rounded-full bg-[#005ea8] shadow-xs shrink-0"></span>
+                <div>
+                  <div class="text-xs font-bold text-slate-900 truncate" id="duel-left-name">Falang Blå</div>
+                  <div class="text-lg sm:text-2xl font-black text-[#005ea8] tabular-nums leading-tight" id="duel-left-mandates">
+                    0 <span class="text-xs font-semibold text-slate-500">ombud</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500 font-medium tabular-nums" id="duel-left-sub">0% • 0 medlemmar</div>
+                </div>
+              </div>
+
+              <!-- Center Majority Target & Status -->
+              <div class="text-center px-1 shrink-0 flex flex-col items-center">
+                <div class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-white/95 border border-slate-300/80 shadow-xs text-slate-800" id="duel-target-pill">
+                  <i data-lucide="flag" class="w-3.5 h-3.5 text-amber-500"></i>
+                  <span id="duel-target-text">51 för majoritet</span>
+                </div>
+                <div class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider" id="duel-unassigned-text">101 oallierade</div>
+              </div>
+
+              <!-- Right Faction Label -->
+              <div class="flex items-center gap-2 min-w-0 text-right justify-end">
+                <div>
+                  <div class="text-xs font-bold text-slate-900 truncate" id="duel-right-name">Falang Gul</div>
+                  <div class="text-lg sm:text-2xl font-black text-amber-600 tabular-nums leading-tight" id="duel-right-mandates">
+                    0 <span class="text-xs font-semibold text-slate-500">ombud</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500 font-medium tabular-nums" id="duel-right-sub">0% • 0 medlemmar</div>
+                </div>
+                <span class="w-3.5 h-3.5 rounded-full bg-[#d97706] shadow-xs shrink-0"></span>
+              </div>
+            </div>
+
+            <!-- Proportional Dual-Battle Bar with 50% Threshold Line -->
+            <div class="relative w-full h-6 rounded-full overflow-hidden bg-slate-200/80 border border-white shadow-inner flex" id="duel-bar-container">
+              <!-- Left Bar (blue, expands left-to-right) -->
+              <div id="duel-bar-left" class="h-full bg-gradient-to-r from-mblue-700 to-mblue-500 transition-all duration-300 flex items-center justify-end pr-2 text-[10px] font-black text-white" style="width: 0%;"></div>
+              
+              <!-- Middle gap for uncommitted -->
+              <div id="duel-bar-gap" class="h-full bg-transparent flex-1"></div>
+
+              <!-- Right Bar (amber, expands right-to-left) -->
+              <div id="duel-bar-right" class="h-full bg-gradient-to-l from-amber-500 to-amber-400 transition-all duration-300 flex items-center justify-start pl-2 text-[10px] font-black text-white" style="width: 0%;"></div>
+
+              <!-- Center 50% Majority Marker Line -->
+              <div class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-slate-900 z-10 shadow-xs"></div>
+              <div class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-3 flex items-center justify-center pointer-events-none z-20">
+                <span class="w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-900 shadow-xs"></span>
+              </div>
+            </div>
+
+            <!-- Dynamic Winner / Duel Status Message -->
+            <div id="duel-status-banner" class="text-center min-h-[22px] flex items-center justify-center">
+              <span class="text-xs font-semibold text-slate-500">Dra distrikt till någon av sidorna för att simulera stämmoutfallet</span>
+            </div>
+          </div>
+
+          <!-- SVT-Style Two Opposing Side Drop Zones -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Side 1: Falang Blå Drop Zone -->
+            <div class="drop-zone faction-drop-box bg-mblue-50/50 border-2 border-dashed border-mblue-300/80 rounded-2xl p-3.5 flex flex-col min-h-[220px] transition-all" data-faction="f1" id="drop-zone-left">
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-mblue-200/60">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="w-3 h-3 rounded-full bg-[#005ea8] shadow-xs shrink-0"></span>
+                  <span class="text-xs font-extrabold text-slate-900 truncate faction-name-editable" contenteditable="true" data-id="f1" title="Klicka för att byta namn">Falang Blå</span>
+                </div>
+                <span class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-mblue-600 text-white shadow-xs tabular-nums" id="left-pill-count">0 ombud</span>
+              </div>
+              
+              <!-- Chips Container for Left Faction -->
+              <div class="district-drop-container flex-1 flex flex-wrap content-start gap-1.5" id="left-chips-container">
+                <!-- Dynamically filled with dropped chips -->
+              </div>
+              
+              <div class="empty-drop-hint text-center py-8 text-xs text-mblue-700/60 font-semibold select-none pointer-events-none" id="left-empty-hint">
+                <i data-lucide="arrow-down-circle" class="w-5 h-5 mx-auto mb-1 text-mblue-400"></i>
+                Släpp distrikt här
+              </div>
+            </div>
+
+            <!-- Side 2: Falang Gul Drop Zone -->
+            <div class="drop-zone faction-drop-box bg-amber-50/50 border-2 border-dashed border-amber-300/80 rounded-2xl p-3.5 flex flex-col min-h-[220px] transition-all" data-faction="f2" id="drop-zone-right">
+              <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-200/60">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="w-3 h-3 rounded-full bg-[#d97706] shadow-xs shrink-0"></span>
+                  <span class="text-xs font-extrabold text-slate-900 truncate faction-name-editable" contenteditable="true" data-id="f2" title="Klicka för att byta namn">Falang Gul</span>
+                </div>
+                <span class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-500 text-white shadow-xs tabular-nums" id="right-pill-count">0 ombud</span>
+              </div>
+
+              <!-- Chips Container for Right Faction -->
+              <div class="district-drop-container flex-1 flex flex-wrap content-start gap-1.5" id="right-chips-container">
+                <!-- Dynamically filled with dropped chips -->
+              </div>
+
+              <div class="empty-drop-hint text-center py-8 text-xs text-amber-700/60 font-semibold select-none pointer-events-none" id="right-empty-hint">
+                <i data-lucide="arrow-down-circle" class="w-5 h-5 mx-auto mb-1 text-amber-400"></i>
+                Släpp distrikt här
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom: Reservoir of Unassigned Districts (Oallierade) -->
+          <div class="drop-zone apple-glass-inner p-3.5 sm:p-4 space-y-2.5 rounded-2xl border-2 border-dashed border-slate-300/70" data-faction="" id="drop-zone-pool">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="inbox" class="w-4 h-4 text-slate-500"></i>
+                <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Oallierade distrikt</span>
+                <span class="text-[11px] font-bold text-slate-500 tabular-nums" id="pool-count-badge">(25 st kvar)</span>
+              </div>
+              <span class="text-[11px] text-slate-400 font-medium">Dra till en sida eller klicka på pilarna</span>
+            </div>
+
+            <!-- Chips Reservoir -->
+            <div class="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto p-1" id="pool-chips-container">
+              <!-- Dynamically populated draggable chips -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Protocol Signatures (Print only) -->
+    <div class="print-signatures hidden">
+      <p class="text-xs text-slate-600 mb-4">
+        Ovanstående ombudsfördelning har fastställts i enlighet med förbundets stadgar baserat på röstberättigade medlemmar per den 31 december.
+      </p>
+      <div class="sig-grid">
+        <div class="sig-line">Förbundssekreterare / Röstlängdsansvarig</div>
+        <div class="sig-line">Förbundsordförande / Justerare</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl mx-auto px-4 mt-12 text-center text-xs text-slate-400 space-y-1">
+    <p class="font-semibold text-slate-600">Moderata Ungdomsförbundet • Websters heltalsmetod</p>
+    <p>Framtagen för förbundsstämmor och rikskonferenser</p>
+  </footer>
+
+  <!-- Paste Modal Dialog (Apple Glass Modal) -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md hidden" id="paste-modal">
+    <div class="apple-glass-card w-full max-w-lg p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="clipboard-paste" class="w-4 h-4 text-mblue-600"></i>
+          Klistra in medlemsstatistik
+        </h3>
+        <button id="btn-close-paste" class="apple-glass-pill w-8 h-8 rounded-full text-slate-500 hover:text-slate-900 flex items-center justify-center transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 font-medium">
+        Kopiera kolumner från Excel eller Google Sheets och klistra in här. Kalkylatorn läser automatiskt av namn och medlemsantal:
+      </p>
+      <textarea id="paste-textarea" rows="6" class="w-full apple-glass-inner p-3 text-xs font-mono text-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-mblue-500/30" placeholder="MUF Stockholm&#9;4193&#10;MUF Skåne&#9;3348&#10;MUF Östergötland&#9;1631"></textarea>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="apple-glass-pill px-4 py-2 rounded-full text-xs font-semibold text-slate-600 hover:text-slate-900" onclick="document.getElementById('paste-modal').classList.add('hidden')">Avbryt</button>
+        <button id="btn-apply-paste" class="px-4 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-mblue-600 to-mblue-500 shadow-md hover:shadow-lg transition active:scale-95">Läs in data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application JavaScript -->
+  <script>
 /**
  * MUF Ombudsfördelningskalkylator - Universal Bundle
  * Apple Liquid Glass Design System (riksdag26-tema)
