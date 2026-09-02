@@ -1335,6 +1335,85 @@
         chip.classList.remove('dragging');
       });
 
+      // Mobile & Tablet Touch Drag-and-Drop
+      let touchGhost = null;
+      let startX = 0, startY = 0;
+      let isDragging = false;
+
+      chip.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button')) return;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        isDragging = false;
+      }, { passive: true });
+
+      chip.addEventListener('touchmove', (e) => {
+        if (e.target.closest('button')) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+
+        // If moved more than 10px, activate drag mode
+        if (!isDragging && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+          isDragging = true;
+          chip.classList.add('dragging');
+
+          touchGhost = chip.cloneNode(true);
+          touchGhost.classList.remove('dragging');
+          touchGhost.classList.add('shadow-2xl');
+          touchGhost.style.position = 'fixed';
+          touchGhost.style.zIndex = '9999';
+          touchGhost.style.pointerEvents = 'none';
+          touchGhost.style.opacity = '0.92';
+          touchGhost.style.transform = 'translate(-50%, -50%) scale(1.04)';
+          touchGhost.style.left = `${touch.clientX}px`;
+          touchGhost.style.top = `${touch.clientY}px`;
+          document.body.appendChild(touchGhost);
+        }
+
+        if (isDragging && touchGhost) {
+          if (e.cancelable) e.preventDefault();
+          touchGhost.style.left = `${touch.clientX}px`;
+          touchGhost.style.top = `${touch.clientY}px`;
+
+          const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+          const dropZone = elemBelow ? elemBelow.closest('.drop-zone') : null;
+
+          document.querySelectorAll('.drop-zone').forEach(z => {
+            z.classList.remove('drag-over', 'drag-over-amber');
+          });
+
+          if (dropZone) {
+            dropZone.classList.add(dropZone === this.dropZoneRight ? 'drag-over-amber' : 'drag-over');
+          }
+        }
+      }, { passive: false });
+
+      chip.addEventListener('touchend', (e) => {
+        if (isDragging) {
+          chip.classList.remove('dragging');
+          if (touchGhost) {
+            touchGhost.remove();
+            touchGhost = null;
+          }
+
+          document.querySelectorAll('.drop-zone').forEach(z => {
+            z.classList.remove('drag-over', 'drag-over-amber');
+          });
+
+          const touch = e.changedTouches[0];
+          const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+          const dropZone = elemBelow ? elemBelow.closest('.drop-zone') : null;
+
+          if (dropZone) {
+            const targetFaction = dropZone.dataset.faction || null;
+            this.setDistrictFaction(unitId, targetFaction);
+          }
+          isDragging = false;
+        }
+      });
+
       const removeBtn = chip.querySelector('.btn-remove-chip');
       if (removeBtn) {
         removeBtn.addEventListener('click', (e) => {
