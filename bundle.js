@@ -1,5 +1,6 @@
 /**
- * MUF Ombudsfördelningskalkylator - Universal Bundle (Liquid Glass + Grundmandat)
+ * MUF Ombudsfördelningskalkylator - Universal Bundle
+ * Apple Liquid Glass Design System (riksdag26-tema)
  */
 
 (function () {
@@ -99,231 +100,206 @@
         { id: 'mst-umea', name: 'MST Umeå', members: 65 },
         { id: 'mst-uppsala', name: 'MST Uppsala', members: 52 },
         { id: 'mst-lund', name: 'MST Lunds universitet', members: 43 },
-        { id: 'mst-halmstad', name: 'MST Halmstad', members: 41 },
-        { id: 'mst-vaxjo', name: 'MST Växjö', members: 31 },
-        { id: 'mst-orebro', name: 'MST Örebro', members: 30 },
-        { id: 'mst-boras', name: 'MST Borås', members: 29 },
-        { id: 'mst-kalmar', name: 'MST Kalmar', members: 27 },
-        { id: 'mst-karlstad', name: 'MST Karlstad', members: 27 },
-        { id: 'mst-norrkoping', name: 'MST Norrköping', members: 20 },
-        { id: 'mst-malmo', name: 'MST Malmö', members: 18 },
-        { id: 'mst-lulea', name: 'MST Luleå', members: 7 },
-        { id: 'mst-kth', name: 'MST KTH', members: 5 },
-        { id: 'mst-mittuni', name: 'MST Mittuniversitetet', members: 5 },
-        { id: 'mst-su', name: 'MST SU', members: 4 },
-        { id: 'mst-mdu', name: 'MST MDU', members: 3 },
-        { id: 'mst-hhs', name: 'MST Handelshögskolan', members: 2 },
-        { id: 'mst-blekinge', name: 'MST Blekinge', members: 1 },
-        { id: 'mst-fhs', name: 'MST Försvarshögskolan', members: 1 },
-        { id: 'mst-mittuni-ostersund', name: 'MST Mittuniversitetet Östersund', members: 0 },
-        { id: 'mst-sodertorn', name: 'MST Södertörn', members: 0 }
+        { id: 'mst-orebro', name: 'MST Örebro', members: 39 },
+        { id: 'mst-karlstad', name: 'MST Karlstad', members: 31 },
+        { id: 'mst-vaxjo', name: 'MST Linné Växjö', members: 28 },
+        { id: 'mst-boras', name: 'MST Borås', members: 24 },
+        { id: 'mst-halmstad', name: 'MST Halmstad', members: 22 },
+        { id: 'mst-malmo', name: 'MST Malmö', members: 19 },
+        { id: 'mst-vasteras', name: 'MST Mälardalen Västerås', members: 18 },
+        { id: 'mst-sodertorn', name: 'MST Södertörn', members: 17 },
+        { id: 'mst-kalmar', name: 'MST Linné Kalmar', members: 16 },
+        { id: 'mst-sundsvall', name: 'MST Mittuniversitetet Sundsvall', members: 15 },
+        { id: 'mst-lulea', name: 'MST Luleå', members: 14 },
+        { id: 'mst-gavle', name: 'MST Gävle', members: 11 },
+        { id: 'mst-kristianstad', name: 'MST Kristianstad', members: 9 },
+        { id: 'mst-trollhattan', name: 'MST Väst Trollhättan', members: 8 },
+        { id: 'mst-ostersund', name: 'MST Mittuniversitetet Östersund', members: 6 },
+        { id: 'mst-eskilstuna', name: 'MST Mälardalen Eskilstuna', members: 5 },
+        { id: 'mst-visby', name: 'MST Uppsala Campus Gotland', members: 4 },
+        { id: 'mst-blekinge', name: 'MST Blekinge', members: 3 }
       ]
     },
     custom: {
       key: 'custom',
-      name: 'Anpassad Fördelning',
-      shortName: 'Egen stämma',
-      assemblyName: 'Stämma / Årsmöte',
-      unitTypeLabel: 'Enhet / Förening',
+      name: 'Anpassad Stämma / Konferens',
+      shortName: 'Anpassad',
+      assemblyName: 'Årsstämman',
+      unitTypeLabel: 'Enhet',
       targetSeats: 100,
       minSeats: 1,
-      description: 'Valfri organisation med fullt anpassningsbara parametrar.',
+      description: 'Flexibel röstlängdskalkylator för distrikts- och kretsstämmor.',
       defaultData: [
-        { id: 'custom-1', name: 'Klubb Alfa', members: 450 },
-        { id: 'custom-2', name: 'Klubb Beta', members: 320 },
-        { id: 'custom-3', name: 'Klubb Gamma', members: 210 },
-        { id: 'custom-4', name: 'Klubb Delta', members: 115 },
-        { id: 'custom-5', name: 'Klubb Epsilon', members: 45 }
+        { id: 'c-1', name: 'Krets 1', members: 1200 },
+        { id: 'c-2', name: 'Krets 2', members: 950 },
+        { id: 'c-3', name: 'Krets 3', members: 780 },
+        { id: 'c-4', name: 'Krets 4', members: 540 },
+        { id: 'c-5', name: 'Krets 5', members: 320 },
+        { id: 'c-6', name: 'Krets 6', members: 190 },
+        { id: 'c-7', name: 'Krets 7', members: 110 }
       ]
     }
   };
 
-  // 2. CALCULATOR ENGINE
+  // 2. MATHEMATICAL CALCULATION ENGINE (Webster / Sainte-Laguë with base mandates)
   function calculateOmbud(units, config) {
-    const targetSeats = Number(config.targetSeats) || 101;
-    const minSeats = Number(config.minSeats) || 0;
+    const targetSeats = config.targetSeats || 101;
+    const minSeats = config.minSeats !== undefined ? config.minSeats : 0;
+    const validUnits = units.filter(u => u.members >= 0);
+    const totalMembers = validUnits.reduce((acc, u) => acc + u.members, 0);
 
-    const cleanUnits = units.map((u, idx) => ({
-      id: u.id || `unit-${idx + 1}`,
-      name: (u.name || `Enhet ${idx + 1}`).trim(),
-      members: Math.max(0, parseInt(u.members, 10) || 0)
-    }));
-
-    const totalMembers = cleanUnits.reduce((sum, u) => sum + u.members, 0);
-
-    if (totalMembers === 0 || cleanUnits.length === 0) {
-      const defaultResults = cleanUnits.map(u => ({
-        ...u,
-        rawQuota: 0,
-        roundedQuota: 0,
-        ombud: minSeats,
-        isBaseMandate: minSeats > 0,
-        shareMembers: 0,
-        shareOmbud: cleanUnits.length > 0 ? Number((100 / cleanUnits.length).toFixed(2)) : 0,
-        neededForNext: 1,
-        dropMargin: null
-      }));
-
+    if (validUnits.length === 0 || totalMembers === 0) {
       return {
-        results: defaultResults,
-        totalMembers: 0,
-        totalOmbud: cleanUnits.length * minSeats,
-        targetSeats,
-        minSeats,
         divisor: 1,
         divisorMin: 1,
         divisorMax: 1,
-        baseMandateUnitsCount: minSeats > 0 ? cleanUnits.length : 0,
-        isExactMatch: cleanUnits.length * minSeats === targetSeats
+        totalMembers: 0,
+        totalOmbud: 0,
+        targetSeats,
+        minSeats,
+        isExactMatch: false,
+        baseMandateUnitsCount: 0,
+        results: []
       };
     }
 
-    const getSeatsAtDivisor = (d) => {
-      return cleanUnits.reduce((sum, u) => {
-        const natural = Math.round(u.members / d);
-        return sum + Math.max(minSeats, natural);
-      }, 0);
-    };
-
-    let dLow = 0.0001;
-    let dHigh = Math.max(totalMembers * 2, 100000);
-    let bestD = totalMembers / Math.max(1, targetSeats);
-
-    while (getSeatsAtDivisor(dLow) < targetSeats && dLow > 0.000001) {
-      dLow /= 2;
-    }
-    while (getSeatsAtDivisor(dHigh) > targetSeats) {
-      dHigh *= 2;
+    function evaluateDivisor(d) {
+      let allocated = 0;
+      for (const u of validUnits) {
+        const quota = u.members / d;
+        const seats = Math.max(minSeats, Math.round(quota));
+        allocated += seats;
+      }
+      return allocated;
     }
 
+    let lowD = 0.0001;
+    let highD = Math.max(1, totalMembers * 2);
+
+    while (evaluateDivisor(highD) >= targetSeats) {
+      highD *= 2;
+    }
+    while (evaluateDivisor(lowD) < targetSeats) {
+      lowD /= 2;
+      if (lowD < 1e-7) break;
+    }
+
+    let bestD = (lowD + highD) / 2;
     for (let i = 0; i < 100; i++) {
-      const dMid = (dLow + dHigh) / 2;
-      const currentSeats = getSeatsAtDivisor(dMid);
-
-      if (currentSeats === targetSeats) {
-        bestD = dMid;
-        break;
-      } else if (currentSeats > targetSeats) {
-        dLow = dMid;
+      const mid = (lowD + highD) / 2;
+      const seats = evaluateDivisor(mid);
+      if (seats >= targetSeats) {
+        lowD = mid;
       } else {
-        dHigh = dMid;
-      }
-      bestD = dMid;
-    }
-
-    let dIntervalMin = bestD;
-    let dIntervalMax = bestD;
-
-    let bLow = dLow / 2;
-    let bHigh = bestD;
-    for (let i = 0; i < 50; i++) {
-      const mid = (bLow + bHigh) / 2;
-      if (getSeatsAtDivisor(mid) === targetSeats) {
-        bHigh = mid;
-        dIntervalMin = mid;
-      } else {
-        bLow = mid;
+        highD = mid;
       }
     }
+    bestD = (lowD + highD) / 2;
 
-    bLow = bestD;
-    bHigh = dHigh * 2;
-    for (let i = 0; i < 50; i++) {
-      const mid = (bLow + bHigh) / 2;
-      if (getSeatsAtDivisor(mid) === targetSeats) {
-        bLow = mid;
-        dIntervalMax = mid;
+    let dMin = bestD;
+    let dMax = bestD;
+    let step = bestD * 0.01;
+    while (step > 0.0001) {
+      if (evaluateDivisor(dMin - step) === targetSeats) {
+        dMin -= step;
       } else {
-        bHigh = mid;
+        step /= 2;
+      }
+    }
+    step = bestD * 0.01;
+    while (step > 0.0001) {
+      if (evaluateDivisor(dMax + step) === targetSeats) {
+        dMax += step;
+      } else {
+        step /= 2;
       }
     }
 
-    const finalDivisor = (dIntervalMin + dIntervalMax) / 2;
-    let baseMandateUnitsCount = 0;
+    let allocatedTotal = 0;
+    let baseMandateCount = 0;
+    const unitResults = validUnits.map(u => {
+      const rawQuota = u.members / bestD;
+      const naturalSeats = Math.round(rawQuota);
+      const ombud = Math.max(minSeats, naturalSeats);
+      const isBaseMandate = (naturalSeats < minSeats);
 
-    const results = cleanUnits.map(u => {
-      const rawQuota = u.members / finalDivisor;
-      const roundedQuota = Math.round(rawQuota);
-      const ombud = Math.max(minSeats, roundedQuota);
-      const isBaseMandate = (minSeats > 0 && roundedQuota < minSeats);
+      if (isBaseMandate) baseMandateCount++;
+      allocatedTotal += ombud;
 
-      if (isBaseMandate) baseMandateUnitsCount++;
-
-      const shareMembers = totalMembers > 0 ? (u.members / totalMembers) * 100 : 0;
-      const nextTargetSeats = ombud + 1;
-      const thresholdNextQuota = nextTargetSeats - 0.5;
-      const minMembersForNext = Math.ceil(thresholdNextQuota * finalDivisor);
-      const neededForNext = Math.max(1, minMembersForNext - u.members);
+      const nextThresholdQuota = ombud + 0.5;
+      const neededMembersForNext = Math.ceil(nextThresholdQuota * bestD) - u.members;
+      const neededForNext = Math.max(1, neededMembersForNext);
 
       let dropMargin = null;
-      if (ombud > minSeats) {
-        const thresholdKeepQuota = ombud - 0.5;
-        const minMembersToKeep = Math.ceil(thresholdKeepQuota * finalDivisor);
-        dropMargin = Math.max(0, u.members - minMembersToKeep + 1);
+      if (!isBaseMandate && ombud > minSeats) {
+        const dropThresholdQuota = ombud - 0.5;
+        const floorMembers = Math.floor(dropThresholdQuota * bestD);
+        dropMargin = Math.max(0, u.members - floorMembers);
       }
 
       return {
         id: u.id,
         name: u.name,
         members: u.members,
-        rawQuota: Number(rawQuota.toFixed(4)),
-        roundedQuota,
+        shareMembers: totalMembers > 0 ? (u.members / totalMembers) * 100 : 0,
+        rawQuota,
         ombud,
         isBaseMandate,
-        shareMembers: Number(shareMembers.toFixed(2)),
-        shareOmbud: 0,
         neededForNext,
         dropMargin
       };
     });
 
-    const totalOmbud = results.reduce((sum, r) => sum + r.ombud, 0);
-    results.forEach(r => {
-      r.shareOmbud = totalOmbud > 0 ? Number(((r.ombud / totalOmbud) * 100).toFixed(2)) : 0;
-    });
-
     return {
-      results,
+      divisor: bestD,
+      divisorMin: dMin,
+      divisorMax: dMax,
       totalMembers,
-      totalOmbud,
+      totalOmbud: allocatedTotal,
       targetSeats,
       minSeats,
-      divisor: Number(finalDivisor.toFixed(4)),
-      divisorMin: Number(dIntervalMin.toFixed(4)),
-      divisorMax: Number(dIntervalMax.toFixed(4)),
-      baseMandateUnitsCount,
-      isExactMatch: totalOmbud === targetSeats
+      isExactMatch: allocatedTotal === targetSeats,
+      baseMandateUnitsCount: baseMandateCount,
+      results: unitResults
     };
   }
 
-  // 3. EXPORTS
+  // 3. EXPORT HELPERS
   function exportToCSV(summary, orgName) {
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `ombudsfordelning_${orgName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${dateStr}.csv`;
 
-    const rows = [
-      [`Ombudsfördelning - ${orgName}`],
-      [`Genererad: ${new Date().toLocaleString('sv-SE')}`],
-      [`Målram ombud: ${summary.targetSeats}`, `Faktiskt fördelade ombud: ${summary.totalOmbud}`],
-      [`Fastställd Divisor (D): ${summary.divisor.toLocaleString('sv-SE')}`],
-      [`Giltigt Divisorintervall: ${summary.divisorMin.toLocaleString('sv-SE')} - ${summary.divisorMax.toLocaleString('sv-SE')}`],
-      [`Grundmandat per enhet: ${summary.minSeats} st`],
-      [],
-      ['Nr', 'Enhetsnamn', 'Medlemmar', 'Andel Medlemmar (%)', 'Kvot (M/D)', 'Naturlig Avrundning', 'Tilldelade Ombud', 'Tilldelningstyp', 'Marginal till nästa (+1)', 'Marginal att behålla (-1)']
+    const headers = [
+      'Nr',
+      'Distrikt/Enhet',
+      'Medlemmar',
+      'Andel (%)',
+      'Kvot (M/D)',
+      'Tilldelade Ombud',
+      'Status',
+      'Till nästa (+1)',
+      'Marginal (-1)'
     ];
 
+    const rows = [
+      [`Officiellt Ombudsfördelningsprotokoll - ${orgName}`],
+      [`Skärningsdatum: 31 december | Fastställd Divisor (D): ${summary.divisor.toFixed(2)}`],
+      [`Målram: ${summary.targetSeats} ombud | Fördelade ombud: ${summary.totalOmbud}`],
+      []
+    ];
+
+    rows.push(headers);
     summary.results.forEach((r, idx) => {
       rows.push([
         idx + 1,
         `"${r.name.replace(/"/g, '""')}"`,
         r.members,
-        r.shareMembers.toLocaleString('sv-SE', { minimumFractionDigits: 2 }) + '%',
-        r.rawQuota.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
-        r.roundedQuota,
+        r.shareMembers.toFixed(2).replace('.', ','),
+        r.rawQuota.toFixed(2).replace('.', ','),
         r.ombud,
         r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat',
-        `+${r.neededForNext} medl.`,
-        r.dropMargin !== null ? `${r.dropMargin} medl.` : 'Skyddad (grundmandat)'
+        r.neededForNext,
+        r.dropMargin !== null ? r.dropMargin : 'Skyddad'
       ]);
     });
 
@@ -332,11 +308,10 @@
       'TOTALT',
       '',
       summary.totalMembers,
-      '100.00%',
-      '',
+      '100,00',
       '',
       summary.totalOmbud,
-      summary.baseMandateUnitsCount > 0 ? `${summary.baseMandateUnitsCount} distrikt på grundmandat` : 'Samtliga på kvot',
+      summary.baseMandateUnitsCount > 0 ? `${summary.baseMandateUnitsCount} på grundmandat` : 'Samtliga kvot',
       '',
       ''
     ]);
@@ -378,11 +353,11 @@
     <body>
       <table>
         <tr><td colspan="9" style="font-size:16pt; font-weight:bold; color:#003f7a;">Officiell Ombudsfördelning – ${escapeHtml(orgName)}</td></tr>
-        <tr><td colspan="9">Beräknad: ${new Date().toLocaleString('sv-SE')} | Divisor: ${summary.divisor.toFixed(2)} | Grundmandat: ${summary.minSeats} ombud</td></tr>
+        <tr><td colspan="9" style="color:#64748b;">Fastställd Divisor (D): ${summary.divisor.toFixed(2)} | Skärningsdatum: 31 december</td></tr>
         <tr><td colspan="9"></td></tr>
         <thead>
           <tr>
-            <th>Nr</th><th>Enhet</th><th>Medlemmar</th><th>Andel</th><th>Kvot (M/D)</th><th>Ombud</th><th>Status</th><th>Till nästa (+1)</th><th>Marginal (-1)</th>
+            <th>Nr</th><th>Distrikt / Enhet</th><th>Medlemmar</th><th>Andel</th><th>Kvot (M/D)</th><th>Tilldelade Ombud</th><th>Status</th><th>Till nästa (+1)</th><th>Marginal (-1)</th>
           </tr>
         </thead>
         <tbody>
@@ -396,10 +371,10 @@
           <td class="num">${r.members.toLocaleString('sv-SE')}</td>
           <td class="num">${r.shareMembers.toFixed(2)}%</td>
           <td class="num">${r.rawQuota.toFixed(2)}</td>
-          <td class="num" style="font-weight:bold; color:#005ea8;">${r.ombud}</td>
+          <td class="num" style="font-weight:bold;">${r.ombud}</td>
           <td class="${r.isBaseMandate ? 'grundmandat' : ''}">${r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat'}</td>
           <td class="num">+${r.neededForNext}</td>
-          <td class="num">${r.dropMargin !== null ? r.dropMargin : '–'}</td>
+          <td class="num">${r.dropMargin !== null ? r.dropMargin : 'Skyddad'}</td>
         </tr>
       `;
     });
@@ -438,38 +413,35 @@
       r.dropMargin !== null ? `${r.dropMargin}` : 'Skyddad'
     ].join('\t'));
 
-    const totalRow = ['TOTALT', '', summary.totalMembers, '100.00%', '', summary.totalOmbud, '', '', ''].join('\t');
-    const fullText = [header, ...rows, totalRow].join('\n');
+    const totalRow = ['TOTALT', '', summary.totalMembers, '100.00%', '', summary.totalOmbud, `${summary.baseMandateUnitsCount} på grundmandat`, '', ''].join('\t');
+    const fullTSV = [header, ...rows, totalRow].join('\n');
 
     try {
-      await navigator.clipboard.writeText(fullText);
+      await navigator.clipboard.writeText(fullTSV);
       return true;
     } catch (err) {
-      console.error('Kunde inte kopiera:', err);
+      console.error('Kunde inte kopiera TSV:', err);
       return false;
     }
   }
 
   async function copyToClipboardMarkdown(summary, orgName) {
-    let md = `### Ombudsfördelning: ${orgName}\n\n`;
-    md += `* **Totala medlemmar:** ${summary.totalMembers.toLocaleString('sv-SE')}\n`;
-    md += `* **Fördelade ombud:** ${summary.totalOmbud} st (Mål: ${summary.targetSeats})\n`;
-    md += `* **Fastställd divisor (D):** ${summary.divisor.toFixed(2)} (Intervall: ${summary.divisorMin.toFixed(2)} – ${summary.divisorMax.toFixed(2)})\n`;
-    md += `* **Grundmandatsnivå:** Minst ${summary.minSeats} grundmandat per enhet\n\n`;
-    md += `| Nr | Distrikt / Förening | Medlemmar | Andel | Kvot (M/D) | Ombud | Status |\n`;
-    md += `|---|---|---|---|---|---|---|\n`;
+    let md = `### Officiell Ombudsfördelning – ${orgName}\n`;
+    md += `*Fastställd Divisor (D): ${summary.divisor.toFixed(2)} | Skärningsdatum: 31 december*\n\n`;
+    md += `| Nr | Distrikt / Enhet | Medlemmar | Andel | Kvot (M/D) | Ombud | Status | Till nästa (+1) | Marginal (-1) |\n`;
+    md += `| :--- | :--- | :---: | :---: | :---: | :---: | :--- | :---: | :---: |\n`;
 
     summary.results.forEach((r, idx) => {
-      md += `| ${idx + 1} | ${r.name} | ${r.members.toLocaleString('sv-SE')} | ${r.shareMembers.toFixed(2)}% | ${r.rawQuota.toFixed(2)} | **${r.ombud}** | ${r.isBaseMandate ? 'Grundmandat' : 'Kvot'} |\n`;
+      md += `| ${idx + 1} | ${r.name} | ${r.members.toLocaleString('sv-SE')} | ${r.shareMembers.toFixed(2)}% | ${r.rawQuota.toFixed(2)} | **${r.ombud}** | ${r.isBaseMandate ? 'Grundmandat' : 'Kvot'} | +${r.neededForNext} | ${r.dropMargin !== null ? r.dropMargin : 'Skyddad'} |\n`;
     });
 
-    md += `| | **TOTALT** | **${summary.totalMembers.toLocaleString('sv-SE')}** | **100%** | | **${summary.totalOmbud}** | |\n`;
+    md += `| **TOTALT** | | **${summary.totalMembers.toLocaleString('sv-SE')}** | **100.00%** | | **${summary.totalOmbud}** | ${summary.baseMandateUnitsCount > 0 ? summary.baseMandateUnitsCount + ' grundmandat' : 'Samtliga kvot'} | | |\n`;
 
     try {
       await navigator.clipboard.writeText(md);
       return true;
     } catch (err) {
-      console.error('Kunde inte kopiera markdown:', err);
+      console.error('Kunde inte kopiera Markdown:', err);
       return false;
     }
   }
@@ -481,19 +453,14 @@
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 150);
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   function escapeHtml(text) {
-    return String(text || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
   }
 
   // 4. MAIN APP CONTROLLER
@@ -520,9 +487,104 @@
         custom: { targetSeats: 100, minSeats: 1 }
       };
 
+      this.factions = this.loadFactions();
+      this.districtFactions = this.loadDistrictFactions();
+
       this.initElements();
       this.initEventListeners();
-      this.initTheme();
+      try {
+        localStorage.removeItem('muf_theme');
+        document.documentElement.removeAttribute('data-theme');
+      } catch (e) {}
+      this.render();
+    }
+
+    loadFactions() {
+      try {
+        const saved = localStorage.getItem('muf_factions_v3');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return [
+        { id: 'f1', name: 'Falang Blå', shortName: 'Blå', color: '#005ea8' },
+        { id: 'f2', name: 'Falang Gul', shortName: 'Gul', color: '#d97706' }
+      ];
+    }
+
+    saveFactions() {
+      try {
+        localStorage.setItem('muf_factions_v3', JSON.stringify(this.factions));
+      } catch (e) {}
+    }
+
+    loadDistrictFactions() {
+      try {
+        const saved = localStorage.getItem('muf_district_factions_v3');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+      return { muf: {}, msu: {}, mst: {}, custom: {} };
+    }
+
+    saveDistrictFactions() {
+      try {
+        localStorage.setItem('muf_district_factions_v3', JSON.stringify(this.districtFactions));
+      } catch (e) {}
+    }
+
+    addFaction() {
+      const PALETTE = ['#005ea8', '#d97706', '#059669', '#7c3aed', '#dc2626', '#0284c7'];
+      if (this.factions.length >= 5) {
+        this.showToast('Max 5 falanger kan skapas.');
+        return;
+      }
+      const num = this.factions.length + 1;
+      const color = PALETTE[(num - 1) % PALETTE.length];
+      this.factions.push({
+        id: 'f_' + Date.now(),
+        name: `Falang ${num}`,
+        shortName: `F${num}`,
+        color: color
+      });
+      this.saveFactions();
+      this.render();
+      this.showToast(`Falang ${num} tillagd.`);
+    }
+
+    removeFaction(factionId) {
+      if (this.factions.length <= 1) {
+        this.showToast('Minst en falang måste finnas kvar.');
+        return;
+      }
+      this.factions = this.factions.filter(f => f.id !== factionId);
+      for (const orgKey in this.districtFactions) {
+        for (const uId in this.districtFactions[orgKey]) {
+          if (this.districtFactions[orgKey][uId] === factionId) {
+            delete this.districtFactions[orgKey][uId];
+          }
+        }
+      }
+      this.saveFactions();
+      this.saveDistrictFactions();
+      this.render();
+      this.showToast('Falang borttagen.');
+    }
+
+    resetFactions() {
+      this.districtFactions[this.currentOrgKey] = {};
+      this.saveDistrictFactions();
+      this.render();
+      this.showToast('Alla distriktstilldelningar nollställda.');
+    }
+
+    setDistrictFaction(unitId, factionId) {
+      if (!this.districtFactions[this.currentOrgKey]) {
+        this.districtFactions[this.currentOrgKey] = {};
+      }
+      if (!factionId || this.districtFactions[this.currentOrgKey][unitId] === factionId) {
+        delete this.districtFactions[this.currentOrgKey][unitId];
+      } else {
+        this.districtFactions[this.currentOrgKey][unitId] = factionId;
+      }
+      this.saveDistrictFactions();
       this.render();
     }
 
@@ -570,8 +632,31 @@
       this.orgDescriptionEl = document.getElementById('org-description-text');
       this.marginalListEl = document.getElementById('marginal-ranking-list');
 
-      this.plenumSvg = document.getElementById('plenum-svg');
-      this.plenumLegend = document.getElementById('plenum-legend');
+      this.duelLeftName = document.getElementById('duel-left-name');
+      this.duelLeftMandates = document.getElementById('duel-left-mandates');
+      this.duelLeftSub = document.getElementById('duel-left-sub');
+      this.duelRightName = document.getElementById('duel-right-name');
+      this.duelRightMandates = document.getElementById('duel-right-mandates');
+      this.duelRightSub = document.getElementById('duel-right-sub');
+      this.duelTargetText = document.getElementById('duel-target-text');
+      this.duelUnassignedText = document.getElementById('duel-unassigned-text');
+      this.duelBarLeft = document.getElementById('duel-bar-left');
+      this.duelBarRight = document.getElementById('duel-bar-right');
+      this.duelStatusBanner = document.getElementById('duel-status-banner');
+
+      this.leftChipsContainer = document.getElementById('left-chips-container');
+      this.rightChipsContainer = document.getElementById('right-chips-container');
+      this.poolChipsContainer = document.getElementById('pool-chips-container');
+      this.leftPillCount = document.getElementById('left-pill-count');
+      this.rightPillCount = document.getElementById('right-pill-count');
+      this.poolCountBadge = document.getElementById('pool-count-badge');
+      this.leftEmptyHint = document.getElementById('left-empty-hint');
+      this.rightEmptyHint = document.getElementById('right-empty-hint');
+
+      this.dropZoneLeft = document.getElementById('drop-zone-left');
+      this.dropZoneRight = document.getElementById('drop-zone-right');
+      this.dropZonePool = document.getElementById('drop-zone-pool');
+      this.btnResetFactions = document.getElementById('btn-reset-factions');
 
       this.printOrgTitle = document.getElementById('print-org-title');
       this.printDate = document.getElementById('print-date');
@@ -582,7 +667,6 @@
       this.pasteModal = document.getElementById('paste-modal');
       this.pasteTextarea = document.getElementById('paste-textarea');
       this.toastContainer = document.getElementById('toast-container');
-      this.themeToggleBtn = document.getElementById('theme-toggle-btn');
     }
 
     initEventListeners() {
@@ -631,6 +715,25 @@
         });
       }
 
+      const decTarget = document.getElementById('btn-target-dec');
+      const incTarget = document.getElementById('btn-target-inc');
+      if (decTarget && this.inputTargetSeats) {
+        decTarget.addEventListener('click', () => {
+          const cur = parseInt(this.inputTargetSeats.value, 10) || 101;
+          if (cur > 1) {
+            this.inputTargetSeats.value = cur - 1;
+            this.inputTargetSeats.dispatchEvent(new Event('input'));
+          }
+        });
+      }
+      if (incTarget && this.inputTargetSeats) {
+        incTarget.addEventListener('click', () => {
+          const cur = parseInt(this.inputTargetSeats.value, 10) || 101;
+          this.inputTargetSeats.value = cur + 1;
+          this.inputTargetSeats.dispatchEvent(new Event('input'));
+        });
+      }
+
       if (this.inputMinSeats) {
         this.inputMinSeats.addEventListener('input', (e) => {
           const val = parseInt(e.target.value, 10);
@@ -641,10 +744,29 @@
         });
       }
 
+      const decMin = document.getElementById('btn-min-dec');
+      const incMin = document.getElementById('btn-min-inc');
+      if (decMin && this.inputMinSeats) {
+        decMin.addEventListener('click', () => {
+          const cur = parseInt(this.inputMinSeats.value, 10) || 0;
+          if (cur > 0) {
+            this.inputMinSeats.value = cur - 1;
+            this.inputMinSeats.dispatchEvent(new Event('input'));
+          }
+        });
+      }
+      if (incMin && this.inputMinSeats) {
+        incMin.addEventListener('click', () => {
+          const cur = parseInt(this.inputMinSeats.value, 10) || 0;
+          this.inputMinSeats.value = cur + 1;
+          this.inputMinSeats.dispatchEvent(new Event('input'));
+        });
+      }
+
       const resetBtn = document.getElementById('btn-reset-data');
       if (resetBtn) {
         resetBtn.addEventListener('click', () => {
-          if (confirm(`Vill du återställa tabellen för ${ORG_CONFIGS[this.currentOrgKey].shortName} till 2025 års officiella siffror?`)) {
+          if (confirm(`Vill du återställa tabellen för ${ORG_CONFIGS[this.currentOrgKey].shortName} till officiella referenssiffror?`)) {
             this.orgData[this.currentOrgKey] = JSON.parse(JSON.stringify(ORG_CONFIGS[this.currentOrgKey].defaultData));
             this.customConfigs[this.currentOrgKey].targetSeats = ORG_CONFIGS[this.currentOrgKey].targetSeats;
             this.customConfigs[this.currentOrgKey].minSeats = ORG_CONFIGS[this.currentOrgKey].minSeats;
@@ -713,15 +835,6 @@
         });
       }
 
-      const copyMdBtn = document.getElementById('btn-copy-md');
-      if (copyMdBtn) {
-        copyMdBtn.addEventListener('click', async () => {
-          const summary = this.getSummary();
-          const success = await copyToClipboardMarkdown(summary, ORG_CONFIGS[this.currentOrgKey].name);
-          if (success) this.showToast('Markdown-tabell kopierad till urklipp.');
-        });
-      }
-
       const printBtn = document.getElementById('btn-print-protocol');
       if (printBtn) {
         printBtn.addEventListener('click', () => {
@@ -729,30 +842,34 @@
         });
       }
 
-      if (this.themeToggleBtn) {
-        this.themeToggleBtn.addEventListener('click', () => {
-          const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-          const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-          document.documentElement.setAttribute('data-theme', nextTheme);
-          localStorage.setItem('muf_theme', nextTheme);
-          this.updateThemeButton(nextTheme);
-        });
+      if (this.btnResetFactions) {
+        this.btnResetFactions.addEventListener('click', () => this.resetFactions());
       }
-    }
 
-    initTheme() {
-      const savedTheme = localStorage.getItem('muf_theme');
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const activeTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', activeTheme);
-      this.updateThemeButton(activeTheme);
-    }
+      // Drag and Drop Zone listeners (SVT Regeringsbyggar-stil)
+      const zones = [this.dropZoneLeft, this.dropZoneRight, this.dropZonePool];
+      zones.forEach(zone => {
+        if (!zone) return;
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          zone.classList.add(zone === this.dropZoneRight ? 'drag-over-amber' : 'drag-over');
+        });
 
-    updateThemeButton(theme) {
-      if (!this.themeToggleBtn) return;
-      this.themeToggleBtn.innerHTML = theme === 'dark'
-        ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`
-        : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('drag-over', 'drag-over-amber');
+        });
+
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('drag-over', 'drag-over-amber');
+          const unitId = e.dataTransfer.getData('text/plain');
+          const targetFaction = zone.dataset.faction || null;
+          if (unitId) {
+            this.setDistrictFaction(unitId, targetFaction);
+          }
+        });
+      });
     }
 
     getSummary() {
@@ -772,8 +889,12 @@
       this.renderKPIs(summary, orgMeta);
       this.renderTableOnly();
       this.renderMarginalList(summary);
-      this.renderPlenum(summary);
+      this.renderFactionAnalysis(summary);
       this.updatePrintHeaders(summary, orgMeta);
+
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
     }
 
     renderKPIs(summary, orgMeta) {
@@ -782,11 +903,11 @@
 
       if (this.targetSeatsBadgeEl) {
         if (summary.isExactMatch) {
-          this.targetSeatsBadgeEl.className = 'stat-pill success';
-          this.targetSeatsBadgeEl.textContent = `Exakt ram (${summary.targetSeats} mål)`;
+          this.targetSeatsBadgeEl.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0 whitespace-nowrap inline-flex items-center gap-1';
+          this.targetSeatsBadgeEl.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Exakt ram (${summary.targetSeats} mål)`;
         } else {
-          this.targetSeatsBadgeEl.className = 'stat-pill warning';
-          this.targetSeatsBadgeEl.textContent = `Diff (${summary.totalOmbud} / ${summary.targetSeats})`;
+          this.targetSeatsBadgeEl.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0 whitespace-nowrap inline-flex items-center gap-1';
+          this.targetSeatsBadgeEl.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3"></i> Diff (${summary.totalOmbud} / ${summary.targetSeats})`;
         }
       }
 
@@ -805,7 +926,7 @@
 
       if (this.baseMandateMetaEl) {
         this.baseMandateMetaEl.textContent = summary.minSeats > 0
-          ? `Minst ${summary.minSeats} grundmandat per distrikt`
+          ? `Minst ${summary.minSeats} grundmandat per enhet`
           : 'Inget krav på grundmandat';
       }
     }
@@ -838,38 +959,44 @@
 
         let statusBadge = '';
         if (r.isBaseMandate) {
-          statusBadge = `<span class="status-badge grundmandat" title="Mottog mandat tack vare grundmandatsnivån (${summary.minSeats} st)">Grundmandat</span>`;
+          statusBadge = `<span class="status-badge grundmandat" title="Mottog mandat via grundmandatsnivån (${summary.minSeats} st)"><i data-lucide="shield" class="w-3 h-3"></i> Grundmandat</span>`;
         } else if (r.ombud > 0) {
-          statusBadge = `<span class="status-badge kvot" title="Kvalificerade proportionellt via röstkvot">Kvotmandat</span>`;
+          statusBadge = `<span class="status-badge kvot" title="Kvalificerade proportionellt via röstkvot"><i data-lucide="check" class="w-3 h-3"></i> Kvotmandat</span>`;
         } else {
-          statusBadge = `<span class="status-badge sparr" title="Nådde ej upp till minsta tröskel">Under spärr</span>`;
+          statusBadge = `<span class="status-badge sparr" title="Nådde ej upp till minsta tröskel"><i data-lucide="minus" class="w-3 h-3"></i> Under spärr</span>`;
         }
+
+        const fId = this.districtFactions[this.currentOrgKey]?.[r.id];
+        const fObj = fId ? this.factions.find(f => f.id === fId) : null;
+        const factionTag = fObj
+          ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white shadow-xs" style="background-color: ${fObj.color};">${escapeHtml(fObj.shortName || fObj.name)}</span>`
+          : '';
 
         tr.innerHTML = `
           <td class="num"><span class="unit-rank">${idx + 1}</span></td>
           <td>
-            <div class="unit-name-cell">
+            <div class="flex items-center gap-1.5">
               <span class="unit-name-text" contenteditable="true" data-id="${r.id}" data-field="name">${escapeHtml(r.name)}</span>
             </div>
           </td>
           <td class="num">
             <input type="number" min="0" step="1" class="inline-input-members" data-id="${r.id}" value="${r.members}">
           </td>
-          <td class="num">${r.shareMembers.toFixed(2)}%</td>
-          <td class="num">${r.rawQuota.toFixed(2)}</td>
+          <td class="num font-mono text-slate-600 font-medium">${r.shareMembers.toFixed(2)}%</td>
+          <td class="num font-mono text-slate-600 font-medium">${r.rawQuota.toFixed(2)}</td>
           <td class="num">
             <span class="ombud-badge">${r.ombud}</span>
           </td>
-          <td>${statusBadge}</td>
-          <td class="num">
-            <span style="color: var(--accent-green); font-weight: 600;">+${r.neededForNext}</span>
+          <td><div class="flex items-center gap-1.5 flex-wrap">${statusBadge}${factionTag}</div></td>
+          <td class="num font-mono">
+            <span class="text-emerald-700 font-bold">+${r.neededForNext}</span>
           </td>
-          <td class="num">
-            <span style="color: var(--text-secondary);">${r.dropMargin !== null ? r.dropMargin : '–'}</span>
+          <td class="num font-mono">
+            <span class="text-slate-500">${r.dropMargin !== null ? r.dropMargin : 'Skyddad'}</span>
           </td>
-          <td class="num" style="width: 40px;">
-            <button class="btn btn-subtle btn-icon btn-delete-row" data-id="${r.id}" title="Ta bort rad" style="color: var(--accent-red); width: 28px; height: 28px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          <td class="num" style="width: 44px;">
+            <button class="apple-glass-pill w-7 h-7 text-rose-500 hover:text-rose-700 hover:bg-rose-50 flex items-center justify-center transition active:scale-90 btn-delete-row" data-id="${r.id}" title="Ta bort rad">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
           </td>
         `;
@@ -918,28 +1045,32 @@
             <td></td>
             <td><strong>TOTALT (${summary.results.length} enheter)</strong></td>
             <td class="num"><strong>${summary.totalMembers.toLocaleString('sv-SE')}</strong></td>
-            <td class="num"><strong>100.00%</strong></td>
-            <td class="num"><strong>–</strong></td>
-            <td class="num"><strong><span class="ombud-badge" style="background: linear-gradient(180deg, var(--muf-blue-accent), var(--muf-blue)); color: white;">${summary.totalOmbud}</span></strong></td>
+            <td class="num font-mono"><strong>100.00%</strong></td>
+            <td class="num font-mono"><strong>–</strong></td>
+            <td class="num"><strong><span class="ombud-badge">${summary.totalOmbud}</span></strong></td>
             <td><strong>${summary.baseMandateUnitsCount > 0 ? summary.baseMandateUnitsCount + ' på grundmandat' : 'Samtliga kvot'}</strong></td>
             <td colspan="3"></td>
           </tr>
         `;
+      }
+
+      if (window.lucide) {
+        window.lucide.createIcons();
       }
     }
 
     updateSortHeaders() {
       this.thElements.forEach(th => {
         const col = th.dataset.sort;
-        const originalText = th.dataset.label || th.textContent.replace(/[ ▲▼]/g, '');
+        const originalText = th.dataset.label || th.textContent.replace(/[ ▲▼]/g, '').trim();
         th.dataset.label = originalText;
 
         if (col === this.sortColumn) {
           th.textContent = `${originalText} ${this.sortDirection === 'asc' ? '▲' : '▼'}`;
-          th.style.color = 'var(--muf-blue)';
+          th.classList.add('text-mblue-600');
         } else {
           th.textContent = originalText;
-          th.style.color = '';
+          th.classList.remove('text-mblue-600');
         }
       });
     }
@@ -955,13 +1086,13 @@
       this.marginalListEl.innerHTML = '';
       sortedByNeeded.forEach((r, idx) => {
         const item = document.createElement('div');
-        item.className = 'marginal-item';
+        item.className = 'marginal-item apple-glass-inner p-3 flex items-center justify-between gap-3';
         item.innerHTML = `
-          <div>
-            <div class="marginal-district">${idx + 1}. ${escapeHtml(r.name)}</div>
-            <div style="font-size: 11px; color: var(--text-muted);">${r.members.toLocaleString('sv-SE')} medl. (${r.ombud} ombud)</div>
+          <div class="min-w-0">
+            <div class="font-bold text-xs sm:text-sm text-slate-900 truncate">${idx + 1}. ${escapeHtml(r.name)}</div>
+            <div class="text-[11px] text-slate-500 font-medium">${r.members.toLocaleString('sv-SE')} medl. (${r.ombud} ombud)</div>
           </div>
-          <div class="marginal-diff" title="Kräver ytterligare ${r.neededForNext} medlemmar för att nå ${r.ombud + 1} ombud">
+          <div class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full whitespace-nowrap shadow-xs">
             +${r.neededForNext} medl.
           </div>
         `;
@@ -969,93 +1100,256 @@
       });
     }
 
-    renderPlenum(summary) {
-      if (!this.plenumSvg || !this.plenumLegend) return;
+    renderFactionAnalysis(summary) {
+      if (!this.duelBarLeft || !this.leftChipsContainer || !this.rightChipsContainer || !this.poolChipsContainer) return;
 
-      const totalSeats = summary.totalOmbud;
-      this.plenumSvg.innerHTML = '';
-      this.plenumLegend.innerHTML = '';
+      const totalSeats = summary.totalOmbud || summary.targetSeats;
+      const majorityNeeded = Math.floor(summary.targetSeats / 2) + 1;
 
-      if (totalSeats === 0) return;
-
-      const unitColors = {};
-      summary.results.forEach((u, i) => {
-        unitColors[u.id] = DISTRICT_COLORS[i % DISTRICT_COLORS.length];
-      });
-
-      const centerX = 300;
-      const centerY = 240;
-      const rowsCount = totalSeats > 80 ? 5 : 4;
-      const minRadius = 90;
-      const maxRadius = 210;
-      const radiusStep = (maxRadius - minRadius) / (rowsCount - 1);
-
-      const seatsPerRow = [];
-      for (let r = 0; r < rowsCount; r++) {
-        const radius = minRadius + r * radiusStep;
-        seatsPerRow.push({ radius, count: 0, weight: radius });
-      }
-      const totalWeight = seatsPerRow.reduce((sum, row) => sum + row.weight, 0);
-      seatsPerRow.forEach((row) => {
-        row.count = Math.floor((row.weight / totalWeight) * totalSeats);
-      });
-      let allocatedRowsSum = seatsPerRow.reduce((sum, row) => sum + row.count, 0);
-      let diff = totalSeats - allocatedRowsSum;
-      while (diff > 0) {
-        seatsPerRow[seatsPerRow.length - 1].count++;
-        diff--;
+      if (this.duelTargetText) {
+        this.duelTargetText.textContent = `${majorityNeeded} för majoritet`;
       }
 
-      const seatList = [];
+      const f1 = this.factions[0] || { id: 'f1', name: 'Falang Blå', color: '#005ea8' };
+      const f2 = this.factions[1] || { id: 'f2', name: 'Falang Gul', color: '#d97706' };
+
+      const assignments = this.districtFactions[this.currentOrgKey] || {};
+
+      let leftSeats = 0;
+      let leftMembers = 0;
+      const leftUnits = [];
+
+      let rightSeats = 0;
+      let rightMembers = 0;
+      const rightUnits = [];
+
+      let unassignedSeats = 0;
+      let unassignedMembers = 0;
+      const unassignedUnits = [];
+
       summary.results.forEach(u => {
-        for (let i = 0; i < u.ombud; i++) {
-          seatList.push({
-            unitId: u.id,
-            unitName: u.name,
-            seatIndex: i + 1,
-            totalUnitSeats: u.ombud,
-            color: unitColors[u.id]
-          });
+        const assigned = assignments[u.id];
+        if (assigned === f1.id) {
+          leftSeats += u.ombud;
+          leftMembers += u.members;
+          leftUnits.push(u);
+        } else if (assigned === f2.id) {
+          rightSeats += u.ombud;
+          rightMembers += u.members;
+          rightUnits.push(u);
+        } else {
+          unassignedSeats += u.ombud;
+          unassignedMembers += u.members;
+          unassignedUnits.push(u);
         }
       });
 
-      let seatCursor = 0;
-      seatsPerRow.forEach((row) => {
-        const { radius, count } = row;
-        if (count === 0) return;
+      const leftPct = totalSeats > 0 ? (leftSeats / totalSeats) * 100 : 0;
+      const rightPct = totalSeats > 0 ? (rightSeats / totalSeats) * 100 : 0;
+      const unassignedPct = totalSeats > 0 ? (unassignedSeats / totalSeats) * 100 : 0;
 
-        const angleStep = Math.PI / (count + 1);
-        for (let i = 1; i <= count; i++) {
-          if (seatCursor >= seatList.length) break;
-          const seat = seatList[seatCursor++];
-          const angle = Math.PI - i * angleStep;
+      // Update Header Text & Stats (Clear, human readable - NO cryptic abbreviations!)
+      if (this.duelLeftName) this.duelLeftName.textContent = f1.name;
+      if (this.duelLeftMandates) {
+        this.duelLeftMandates.innerHTML = `${leftSeats} <span class="text-xs font-semibold text-slate-500">ombud</span>`;
+      }
+      if (this.duelLeftSub) {
+        this.duelLeftSub.textContent = `${leftPct.toFixed(1)}% • ${leftMembers.toLocaleString('sv-SE')} medlemmar`;
+      }
 
-          const x = centerX + radius * Math.cos(angle);
-          const y = centerY - radius * Math.sin(angle);
+      if (this.duelRightName) this.duelRightName.textContent = f2.name;
+      if (this.duelRightMandates) {
+        this.duelRightMandates.innerHTML = `${rightSeats} <span class="text-xs font-semibold text-slate-500">ombud</span>`;
+      }
+      if (this.duelRightSub) {
+        this.duelRightSub.textContent = `${rightPct.toFixed(1)}% • ${rightMembers.toLocaleString('sv-SE')} medlemmar`;
+      }
 
-          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          circle.setAttribute('cx', x);
-          circle.setAttribute('cy', y);
-          circle.setAttribute('r', totalSeats > 80 ? '6.5' : '8');
-          circle.setAttribute('fill', seat.color);
-          circle.setAttribute('class', 'seat-dot');
+      if (this.duelUnassignedText) {
+        this.duelUnassignedText.textContent = `${unassignedSeats} oallierade`;
+      }
 
-          const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-          title.textContent = `${seat.unitName}: Ombud ${seat.seatIndex} av ${seat.totalUnitSeats}`;
-          circle.appendChild(title);
+      // Duel Bars (Proportional left and right bars toward 50% line)
+      if (this.duelBarLeft) {
+        this.duelBarLeft.style.width = `${leftPct}%`;
+        this.duelBarLeft.textContent = leftPct >= 14 ? `${leftSeats} ombud` : '';
+      }
+      if (this.duelBarRight) {
+        this.duelBarRight.style.width = `${rightPct}%`;
+        this.duelBarRight.textContent = rightPct >= 14 ? `${rightSeats} ombud` : '';
+      }
 
-          this.plenumSvg.appendChild(circle);
+      // Check for majority celebration
+      let newlyWon = false;
+      const leftHasMaj = leftSeats >= majorityNeeded;
+      const rightHasMaj = rightSeats >= majorityNeeded;
+
+      if (leftHasMaj && !f1.hadMajority) {
+        f1.hadMajority = true;
+        newlyWon = true;
+      } else if (!leftHasMaj) {
+        f1.hadMajority = false;
+      }
+
+      if (rightHasMaj && !f2.hadMajority) {
+        f2.hadMajority = true;
+        newlyWon = true;
+      } else if (!rightHasMaj) {
+        f2.hadMajority = false;
+      }
+
+      if (newlyWon && typeof confetti === 'function') {
+        try {
+          confetti({ particleCount: 65, spread: 70, origin: { y: 0.65 } });
+        } catch(e) {}
+      }
+
+      // Update Status Banner
+      if (this.duelStatusBanner) {
+        if (leftHasMaj) {
+          this.duelStatusBanner.innerHTML = `
+            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+              🎉 ${escapeHtml(f1.name)} har säkrat egen majoritet! (${leftSeats} av ${summary.targetSeats} ombud)
+            </span>
+          `;
+        } else if (rightHasMaj) {
+          this.duelStatusBanner.innerHTML = `
+            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+              🎉 ${escapeHtml(f2.name)} har säkrat egen majoritet! (${rightSeats} av ${summary.targetSeats} ombud)
+            </span>
+          `;
+        } else {
+          this.duelStatusBanner.innerHTML = `
+            <span class="text-xs font-medium text-slate-600">
+              Kvar till egen majoritet: <strong class="text-[#005ea8]">${majorityNeeded - leftSeats}</strong> (${escapeHtml(f1.name)}) vs <strong class="text-amber-700">${majorityNeeded - rightSeats}</strong> (${escapeHtml(f2.name)})
+            </span>
+          `;
         }
-      });
+      }
 
-      summary.results.filter(u => u.ombud > 0).forEach(u => {
-        const item = document.createElement('div');
-        item.className = 'legend-item';
-        item.innerHTML = `
-          <span class="legend-dot" style="background-color: ${unitColors[u.id]};"></span>
-          <span>${escapeHtml(u.name)} (${u.ombud})</span>
+      // Update pill counters in drop boxes
+      if (this.leftPillCount) this.leftPillCount.textContent = `${leftSeats} ombud`;
+      if (this.rightPillCount) this.rightPillCount.textContent = `${rightSeats} ombud`;
+      if (this.poolCountBadge) this.poolCountBadge.textContent = `(${unassignedUnits.length} distrikt kvar)`;
+
+      // Empty hints visibility
+      if (this.leftEmptyHint) this.leftEmptyHint.style.display = leftUnits.length === 0 ? 'block' : 'none';
+      if (this.rightEmptyHint) this.rightEmptyHint.style.display = rightUnits.length === 0 ? 'block' : 'none';
+
+      // 1. Render Left Chips
+      this.leftChipsContainer.innerHTML = '';
+      leftUnits.forEach(u => {
+        const chip = document.createElement('div');
+        chip.className = 'district-drag-chip px-2.5 py-1.5 rounded-xl bg-white/95 border border-mblue-200/90 shadow-xs flex items-center justify-between gap-2 text-xs hover:shadow-md transition-all';
+        chip.setAttribute('draggable', 'true');
+        chip.dataset.id = u.id;
+        chip.innerHTML = `
+          <div class="flex items-center gap-1.5 min-w-0 select-none">
+            <span class="w-2 h-2 rounded-full bg-[#005ea8] shrink-0"></span>
+            <span class="font-bold text-slate-900 truncate">${escapeHtml(u.name)}</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 select-none">
+            <span class="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-[#005ea8] text-white tabular-nums shadow-xs">${u.ombud}</span>
+            <button class="btn-remove-chip text-slate-400 hover:text-rose-600 transition rounded-full w-4 h-4 flex items-center justify-center font-bold" data-id="${u.id}" title="Ta bort och lägg tillbaka till oallierade">
+              ×
+            </button>
+          </div>
         `;
-        this.plenumLegend.appendChild(item);
+        this.attachChipEvents(chip, u.id);
+        this.leftChipsContainer.appendChild(chip);
+      });
+
+      // 2. Render Right Chips
+      this.rightChipsContainer.innerHTML = '';
+      rightUnits.forEach(u => {
+        const chip = document.createElement('div');
+        chip.className = 'district-drag-chip px-2.5 py-1.5 rounded-xl bg-white/95 border border-amber-200/90 shadow-xs flex items-center justify-between gap-2 text-xs hover:shadow-md transition-all';
+        chip.setAttribute('draggable', 'true');
+        chip.dataset.id = u.id;
+        chip.innerHTML = `
+          <div class="flex items-center gap-1.5 min-w-0 select-none">
+            <span class="w-2 h-2 rounded-full bg-[#d97706] shrink-0"></span>
+            <span class="font-bold text-slate-900 truncate">${escapeHtml(u.name)}</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 select-none">
+            <span class="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-[#d97706] text-white tabular-nums shadow-xs">${u.ombud}</span>
+            <button class="btn-remove-chip text-slate-400 hover:text-rose-600 transition rounded-full w-4 h-4 flex items-center justify-center font-bold" data-id="${u.id}" title="Ta bort och lägg tillbaka till oallierade">
+              ×
+            </button>
+          </div>
+        `;
+        this.attachChipEvents(chip, u.id);
+        this.rightChipsContainer.appendChild(chip);
+      });
+
+      // 3. Render Pool Chips (Sorted by ombud descending: largest districts first!)
+      unassignedUnits.sort((a, b) => b.ombud - a.ombud || b.members - a.members);
+      this.poolChipsContainer.innerHTML = '';
+      unassignedUnits.forEach(u => {
+        const chip = document.createElement('div');
+        chip.className = 'district-drag-chip apple-glass-pill px-2.5 py-1.5 rounded-xl border border-white/90 shadow-xs flex items-center gap-2 hover:shadow-md hover:scale-[1.02] transition-all';
+        chip.setAttribute('draggable', 'true');
+        chip.dataset.id = u.id;
+        chip.innerHTML = `
+          <button class="quick-move-btn px-1.5 py-0.5 rounded-full text-[10px] font-black bg-mblue-50 text-mblue-700 hover:bg-mblue-600 hover:text-white transition shadow-xs" data-move="${f1.id}" title="Flytta till ${escapeHtml(f1.name)}">
+            ←
+          </button>
+          <span class="text-xs font-bold text-slate-800 select-none">${escapeHtml(u.name)}</span>
+          <span class="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-800 text-white tabular-nums select-none shadow-xs">${u.ombud}</span>
+          <button class="quick-move-btn px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white transition shadow-xs" data-move="${f2.id}" title="Flytta till ${escapeHtml(f2.name)}">
+            →
+          </button>
+        `;
+        this.attachChipEvents(chip, u.id);
+        this.poolChipsContainer.appendChild(chip);
+      });
+
+      // Attach editable name handlers
+      document.querySelectorAll('.faction-name-editable').forEach(el => {
+        el.addEventListener('blur', (e) => {
+          const id = e.target.dataset.id;
+          const newName = e.target.textContent.trim();
+          const f = this.factions.find(x => x.id === id);
+          if (f && newName && newName !== f.name) {
+            f.name = newName;
+            f.shortName = newName.slice(0, 6);
+            this.saveFactions();
+            this.render();
+          }
+        });
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    attachChipEvents(chip, unitId) {
+      chip.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', unitId);
+        e.dataTransfer.effectAllowed = 'move';
+        chip.classList.add('dragging');
+      });
+
+      chip.addEventListener('dragend', () => {
+        chip.classList.remove('dragging');
+      });
+
+      const removeBtn = chip.querySelector('.btn-remove-chip');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.setDistrictFaction(unitId, null);
+        });
+      }
+
+      const quickMoveBtns = chip.querySelectorAll('.quick-move-btn');
+      quickMoveBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetFaction = btn.dataset.move;
+          this.setDistrictFaction(unitId, targetFaction);
+        });
       });
     }
 
@@ -1070,13 +1364,13 @@
     openPasteModal() {
       if (!this.pasteModal) return;
       this.pasteTextarea.value = '';
-      this.pasteModal.classList.add('open');
+      this.pasteModal.classList.remove('hidden');
       this.pasteTextarea.focus();
     }
 
     closePasteModal() {
       if (!this.pasteModal) return;
-      this.pasteModal.classList.remove('open');
+      this.pasteModal.classList.add('hidden');
     }
 
     handleApplyPaste() {
@@ -1123,27 +1417,36 @@
         this.saveData();
         this.closePasteModal();
         this.render();
-        this.showToast(`Importerade ${parsedUnits.length} enheter framgångsrikt!`);
+        this.showToast(`Importerade ${parsedUnits.length} enheter!`);
+        if (window.confetti) {
+          window.confetti({ particleCount: 50, spread: 60, origin: { y: 0.85 } });
+        }
       } else {
         alert('Kunde inte identifiera giltiga rader. Kontrollera formatet (Namn och Medlemsantal).');
       }
     }
 
     showToast(message) {
-      if (!this.toastContainer) return;
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-green);"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>${escapeHtml(message)}</span>
-      `;
-      this.toastContainer.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        toast.style.transition = 'all 0.25s ease';
-        setTimeout(() => toast.remove(), 250);
-      }, 3000);
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      if (toast && toastMsg) {
+        toastMsg.textContent = message;
+        toast.classList.remove('opacity-0', '-translate-y-24', 'pointer-events-none');
+        toast.classList.add('opacity-100', 'translate-y-0');
+        if (this._toastTimer) clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+          toast.classList.remove('opacity-100', 'translate-y-0');
+          toast.classList.add('opacity-0', '-translate-y-24', 'pointer-events-none');
+        }, 2800);
+        return;
+      }
+      if (this.toastContainer) {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.innerHTML = `<span>${escapeHtml(message)}</span>`;
+        this.toastContainer.appendChild(t);
+        setTimeout(() => t.remove(), 2500);
+      }
     }
   }
 

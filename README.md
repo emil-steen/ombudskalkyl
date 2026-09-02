@@ -60,7 +60,7 @@ För varje distrikt/förening genomförs en realtidsanalys som visar hur nära e
 
 ## ✨ Huvudfunktioner
 
-- 💎 **Apple Liquid Glass Design:** Skapat i linje med `muf.se`:s grafiska profil med frostade glasytor (`backdrop-filter: blur(24px)`), subtila reflektioner och stöd för **Ljust och Mörkt läge (Dark Mode)**.
+- 💎 **Apple Liquid Glass Design:** Skapat efter samma Apple Liquid Glass-designtema som `riksdag26` med frostade glasytor, ambient chromatic mesh och subtila reflektioner.
 - 📱 **Full Mobilresponsivitet:** Optimerat gränssnitt för iPhone, iPad och bärbara datorer med flytande layout, horisontell touch-scroll och anpassade tryckytor.
 - 📋 **Realtidsredigering & Excel-import:**
   - Redigera medlemsantal direkt i tabellcellerna – divisorer, kvoter och marginaler räknas om direkt i realtid.
