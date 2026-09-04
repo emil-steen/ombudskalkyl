@@ -390,6 +390,12 @@
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
+.status-badge.lottat {
+  background: rgba(124, 58, 237, 0.12);
+  color: #6d28d9;
+  border: 1px solid rgba(124, 58, 237, 0.28);
+}
+
 .calc-table tfoot {
   position: sticky;
   bottom: 0;

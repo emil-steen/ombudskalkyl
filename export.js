@@ -33,7 +33,7 @@ export function exportToCSV(summary, orgName) {
       r.rawQuota.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
       r.roundedQuota,
       r.ombud,
-      r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat',
+      r.isLotteryWinner ? 'Kvotmandat (Lottning)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat'),
       `+${r.neededForNext} medl.`,
       r.dropMargin !== null ? `${r.dropMargin} medl.` : 'Skyddad (grundmandat)'
     ]);
@@ -128,7 +128,7 @@ export function exportToExcel(summary, orgName) {
         <td class="num">${r.shareMembers.toFixed(2)}%</td>
         <td class="num">${r.rawQuota.toFixed(2)}</td>
         <td class="num" style="font-weight:bold; font-size:11pt; color:#005ea8;">${r.ombud}</td>
-        <td class="${r.isBaseMandate ? 'grundmandat' : ''}">${r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat'}</td>
+        <td class="${r.isLotteryWinner ? 'lottat' : (r.isBaseMandate ? 'grundmandat' : '')}">${r.isLotteryWinner ? 'Kvotmandat (Lottning)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat')}</td>
         <td class="num">+${r.neededForNext}</td>
         <td class="num">${r.dropMargin !== null ? r.dropMargin : '–'}</td>
       </tr>
@@ -169,7 +169,7 @@ export async function copyToClipboardTSV(summary) {
     `${r.shareMembers.toFixed(2)}%`,
     r.rawQuota.toFixed(2),
     r.ombud,
-    r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat',
+    r.isLotteryWinner ? 'Kvotmandat (Lottning)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat'),
     `+${r.neededForNext}`,
     r.dropMargin !== null ? `${r.dropMargin}` : 'Skyddad'
   ].join('\t'));
@@ -201,7 +201,7 @@ export async function copyToClipboardMarkdown(summary, orgName) {
   md += `|---|---|---|---|---|---|---|\n`;
 
   summary.results.forEach((r, idx) => {
-    md += `| ${idx + 1} | ${r.name} | ${r.members.toLocaleString('sv-SE')} | ${r.shareMembers.toFixed(2)}% | ${r.rawQuota.toFixed(2)} | **${r.ombud}** | ${r.isBaseMandate ? 'Grundmandat' : 'Kvot'} |\n`;
+    md += `| ${idx + 1} | ${r.name} | ${r.members.toLocaleString('sv-SE')} | ${r.shareMembers.toFixed(2)}% | ${r.rawQuota.toFixed(2)} | **${r.ombud}** | ${r.isLotteryWinner ? 'Kvot (Lottat)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvot')} |\n`;
   });
 
   md += `| | **TOTALT** | **${summary.totalMembers.toLocaleString('sv-SE')}** | **100%** | | **${summary.totalOmbud}** | |\n`;

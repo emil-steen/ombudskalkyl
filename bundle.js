@@ -126,7 +126,7 @@
       shortName: 'Anpassad',
       assemblyName: 'Årsstämman',
       unitTypeLabel: 'Enhet',
-      targetSeats: 100,
+      targetSeats: 101,
       minSeats: 1,
       description: 'Flexibel röstlängdskalkylator för distrikts- och kretsstämmor.',
       defaultData: [
@@ -141,126 +141,373 @@
     }
   };
 
-  // 2. MATHEMATICAL CALCULATION ENGINE (Webster / Sainte-Laguë with base mandates)
+  // 2. MATHEMATICAL CALCULATION ENGINE (Webster / Sainte-Laguë with base mandates & tie-breaking)
   function calculateOmbud(units, config) {
-    const targetSeats = config.targetSeats || 101;
-    const minSeats = config.minSeats !== undefined ? config.minSeats : 0;
-    const validUnits = units.filter(u => u.members >= 0);
-    const totalMembers = validUnits.reduce((acc, u) => acc + u.members, 0);
+    const targetSeats = Number(config.targetSeats) || 101;
+    const minSeats = config.minSeats !== undefined ? Number(config.minSeats) : 0;
+    const manualTieWinners = Array.isArray(config.manualTieWinners) ? config.manualTieWinners : null;
+    const tieBreakSeed = typeof config.tieBreakSeed === 'number' ? config.tieBreakSeed : 42;
 
-    if (validUnits.length === 0 || totalMembers === 0) {
+    const cleanUnits = units
+      .filter(u => u.members >= 0)
+      .map((u, idx) => ({
+        id: u.id || `unit-${idx + 1}`,
+        name: (u.name || `Enhet ${idx + 1}`).trim(),
+        members: Math.max(0, parseInt(u.members, 10) || 0)
+      }));
+    const totalMembers = cleanUnits.reduce((acc, u) => acc + u.members, 0);
+
+    if (cleanUnits.length === 0 || totalMembers === 0) {
+      const defaultResults = cleanUnits.map(u => ({
+        ...u,
+        rawQuota: 0,
+        roundedQuota: 0,
+        ombud: minSeats,
+        isBaseMandate: minSeats > 0,
+        isTied: false,
+        isLotteryWinner: false,
+        shareMembers: 0,
+        shareOmbud: cleanUnits.length > 0 ? Number((100 / cleanUnits.length).toFixed(2)) : 0,
+        neededForNext: 1,
+        dropMargin: null
+      }));
+
       return {
+        results: defaultResults,
+        totalMembers: 0,
+        totalOmbud: cleanUnits.length * minSeats,
+        targetSeats,
+        minSeats,
         divisor: 1,
         divisorMin: 1,
         divisorMax: 1,
-        totalMembers: 0,
-        totalOmbud: 0,
-        targetSeats,
-        minSeats,
-        isExactMatch: false,
-        baseMandateUnitsCount: 0,
-        results: []
+        baseMandateUnitsCount: minSeats > 0 ? cleanUnits.length : 0,
+        isExactMatch: cleanUnits.length * minSeats === targetSeats,
+        hasTie: false,
+        tiedUnitIds: [],
+        lotteryWinnerIds: [],
+        seatsToDistribute: 0
       };
     }
 
-    function evaluateDivisor(d) {
-      let allocated = 0;
-      for (const u of validUnits) {
-        const quota = u.members / d;
-        const seats = Math.max(minSeats, Math.round(quota));
-        allocated += seats;
+    // Om grundmandat ensamt täcker eller överskrider målramen
+    if (cleanUnits.length * minSeats >= targetSeats) {
+      const defaultResults = cleanUnits.map(u => {
+        const shareMembers = totalMembers > 0 ? (u.members / totalMembers) * 100 : 0;
+        return {
+          ...u,
+          rawQuota: 0,
+          roundedQuota: 0,
+          ombud: minSeats,
+          isBaseMandate: minSeats > 0,
+          isTied: false,
+          isLotteryWinner: false,
+          shareMembers: Number(shareMembers.toFixed(2)),
+          shareOmbud: Number((100 / cleanUnits.length).toFixed(2)),
+          neededForNext: 1,
+          dropMargin: null
+        };
+      });
+
+      return {
+        results: defaultResults,
+        totalMembers,
+        totalOmbud: cleanUnits.length * minSeats,
+        targetSeats,
+        minSeats,
+        divisor: 1,
+        divisorMin: 1,
+        divisorMax: 1,
+        baseMandateUnitsCount: minSeats > 0 ? cleanUnits.length : 0,
+        isExactMatch: cleanUnits.length * minSeats === targetSeats,
+        hasTie: false,
+        tiedUnitIds: [],
+        lotteryWinnerIds: [],
+        seatsToDistribute: 0
+      };
+    }
+
+    const TOL = 1e-7;
+    function evalAtD(d) {
+      let lowSum = 0;
+      let highSum = 0;
+      const boundary = [];
+      for (const u of cleanUnits) {
+        const q = u.members / d;
+        const k = Math.floor(q);
+        const rem = q - k;
+        if (Math.abs(rem - 0.5) < TOL) {
+          lowSum += Math.max(minSeats, k);
+          highSum += Math.max(minSeats, k + 1);
+          boundary.push(u.id);
+        } else {
+          const s = Math.max(minSeats, Math.round(q));
+          lowSum += s;
+          highSum += s;
+        }
       }
-      return allocated;
+      return { lowSum, highSum, boundary };
     }
 
     let lowD = 0.0001;
-    let highD = Math.max(1, totalMembers * 2);
+    let highD = Math.max(totalMembers * 2, 100000);
 
-    while (evaluateDivisor(highD) >= targetSeats) {
+    while (evalAtD(highD).highSum >= targetSeats) {
       highD *= 2;
     }
-    while (evaluateDivisor(lowD) < targetSeats) {
+    while (evalAtD(lowD).lowSum < targetSeats) {
       lowD /= 2;
       if (lowD < 1e-7) break;
     }
 
-    let bestD = (lowD + highD) / 2;
-    for (let i = 0; i < 100; i++) {
-      const mid = (lowD + highD) / 2;
-      const seats = evaluateDivisor(mid);
-      if (seats >= targetSeats) {
-        lowD = mid;
+    let bestMid = (lowD + highD) / 2;
+    for (let i = 0; i < 120; i++) {
+      bestMid = (lowD + highD) / 2;
+      const { lowSum, highSum } = evalAtD(bestMid);
+      if (lowSum > targetSeats) {
+        lowD = bestMid;
+      } else if (highSum < targetSeats) {
+        highD = bestMid;
       } else {
-        highD = mid;
-      }
-    }
-    bestD = (lowD + highD) / 2;
-
-    let dMin = bestD;
-    let dMax = bestD;
-    let step = bestD * 0.01;
-    while (step > 0.0001) {
-      if (evaluateDivisor(dMin - step) === targetSeats) {
-        dMin -= step;
-      } else {
-        step /= 2;
-      }
-    }
-    step = bestD * 0.01;
-    while (step > 0.0001) {
-      if (evaluateDivisor(dMax + step) === targetSeats) {
-        dMax += step;
-      } else {
-        step /= 2;
+        break;
       }
     }
 
-    let allocatedTotal = 0;
+    let bestD = bestMid;
+    let { lowSum, highSum, boundary: boundaryIds } = evalAtD(bestD);
+
+    // Finjustera bestD till exakt analytisk kvot M / (k + 0.5) om boundary-enheter finns
+    for (const u of cleanUnits) {
+      const q = u.members / bestD;
+      const k = Math.round(q - 0.5);
+      if (k + 0.5 > 0) {
+        const candD = u.members / (k + 0.5);
+        if (Math.abs(candD - bestD) / bestD < 1e-3) {
+          const resCand = evalAtD(candD);
+          if (resCand.lowSum <= targetSeats && targetSeats <= resCand.highSum) {
+            bestD = candD;
+            lowSum = resCand.lowSum;
+            highSum = resCand.highSum;
+            boundaryIds = resCand.boundary;
+            break;
+          }
+        }
+      }
+    }
+
+    // 2. Initial mandatfördelning
+    const unitSeats = {};
+    for (const u of cleanUnits) {
+      const q = u.members / bestD;
+      const k = Math.floor(q);
+      const isBoundary = boundaryIds.includes(u.id);
+      const naturalSeats = isBoundary ? k : Math.round(q);
+      unitSeats[u.id] = Math.max(minSeats, naturalSeats);
+    }
+
+    let currentTotal = 0;
+    for (const u of cleanUnits) {
+      currentTotal += unitSeats[u.id];
+    }
+
+    // 3. Strikt Sainte-Laguë prioritetsjustering och likalägesgaranti
+    let hasTie = false;
+    let tiedUnitIds = [];
+    let lotteryWinnerIds = [];
+    let seatsToDistribute = 0;
+
+    const getLotteryScore = (uid) => {
+      let val = tieBreakSeed;
+      for (let i = 0; i < uid.length; i++) {
+        val += uid.charCodeAt(i) * (i + 1);
+      }
+      const s = Math.sin(val) * 10000;
+      return s - Math.floor(s);
+    };
+
+    // Om totalen understiger målramen: tilldela enligt högsta nästa kvot
+    while (currentTotal < targetSeats) {
+      const prios = cleanUnits.map(u => {
+        const cur = unitSeats[u.id];
+        const p = u.members / (cur + 0.5);
+        return { id: u.id, priority: p };
+      });
+      prios.sort((a, b) => b.priority - a.priority);
+      const topP = prios[0].priority;
+      const tiedGroup = prios.filter(p => Math.abs(p.priority - topP) < 1e-5).map(p => p.id);
+      const needed = targetSeats - currentTotal;
+
+      if (tiedGroup.length > needed) {
+        hasTie = true;
+        tiedUnitIds = [...tiedGroup];
+        seatsToDistribute = needed;
+
+        let winners = [];
+        if (manualTieWinners && manualTieWinners.length > 0) {
+          winners = manualTieWinners.filter(id => tiedGroup.includes(id)).slice(0, needed);
+        }
+        if (winners.length < needed) {
+          const remaining = tiedGroup.filter(id => !winners.includes(id));
+          remaining.sort((a, b) => getLotteryScore(a) - getLotteryScore(b));
+          winners.push(...remaining.slice(0, needed - winners.length));
+        }
+
+        lotteryWinnerIds = winners;
+        for (const wid of winners) {
+          unitSeats[wid] += 1;
+          currentTotal += 1;
+        }
+        break;
+      } else {
+        for (const uid of tiedGroup) {
+          unitSeats[uid] += 1;
+          currentTotal += 1;
+        }
+      }
+    }
+
+    // Om totalen överstiger målramen: dra tillbaka från lägsta erhållna kvot
+    while (currentTotal > targetSeats) {
+      const prios = [];
+      for (const u of cleanUnits) {
+        const cur = unitSeats[u.id];
+        if (cur > minSeats) {
+          prios.push({ id: u.id, priority: u.members / (cur - 0.5) });
+        }
+      }
+      prios.sort((a, b) => a.priority - b.priority);
+      const lowestP = prios[0].priority;
+      const tiedGroup = prios.filter(p => Math.abs(p.priority - lowestP) < 1e-5).map(p => p.id);
+      const toDrop = currentTotal - targetSeats;
+
+      if (tiedGroup.length > toDrop) {
+        hasTie = true;
+        tiedUnitIds = [...tiedGroup];
+        seatsToDistribute = tiedGroup.length - toDrop;
+
+        let keepWinners = [];
+        if (manualTieWinners && manualTieWinners.length > 0) {
+          keepWinners = manualTieWinners.filter(id => tiedGroup.includes(id)).slice(0, seatsToDistribute);
+        }
+        if (keepWinners.length < seatsToDistribute) {
+          const remaining = tiedGroup.filter(id => !keepWinners.includes(id));
+          remaining.sort((a, b) => getLotteryScore(a) - getLotteryScore(b));
+          keepWinners.push(...remaining.slice(0, seatsToDistribute - keepWinners.length));
+        }
+
+        lotteryWinnerIds = keepWinners;
+        const droppers = tiedGroup.filter(id => !keepWinners.includes(id));
+        for (const did of droppers) {
+          unitSeats[did] -= 1;
+          currentTotal -= 1;
+        }
+        break;
+      } else {
+        for (const did of tiedGroup) {
+          unitSeats[did] -= 1;
+          currentTotal -= 1;
+        }
+      }
+    }
+
+    // 4. Hitta giltigt divisorintervall
+    let dIntervalMin = bestD;
+    let dIntervalMax = bestD;
+
+    if (!hasTie) {
+      let bLow = lowD / 2;
+      let bHigh = bestD;
+      for (let i = 0; i < 50; i++) {
+        const mid = (bLow + bHigh) / 2;
+        if (evalAtD(mid).lowSum === targetSeats) {
+          bHigh = mid;
+          dIntervalMin = mid;
+        } else {
+          bLow = mid;
+        }
+      }
+
+      bLow = bestD;
+      bHigh = highD * 2;
+      for (let i = 0; i < 50; i++) {
+        const mid = (bLow + bHigh) / 2;
+        if (evalAtD(mid).lowSum === targetSeats) {
+          bLow = mid;
+          dIntervalMax = mid;
+        } else {
+          bHigh = mid;
+        }
+      }
+    }
+
+    // 5. Bygg resultat per enhet
     let baseMandateCount = 0;
-    const unitResults = validUnits.map(u => {
+    const unitResults = cleanUnits.map(u => {
       const rawQuota = u.members / bestD;
+      const ombud = unitSeats[u.id];
+      const isBoundary = tiedUnitIds.includes(u.id);
+      const isWinner = lotteryWinnerIds.includes(u.id);
       const naturalSeats = Math.round(rawQuota);
-      const ombud = Math.max(minSeats, naturalSeats);
-      const isBaseMandate = (naturalSeats < minSeats);
+      const isBaseMandate = (minSeats > 0 && naturalSeats < minSeats);
 
       if (isBaseMandate) baseMandateCount++;
-      allocatedTotal += ombud;
 
-      const nextThresholdQuota = ombud + 0.5;
-      const neededMembersForNext = Math.ceil(nextThresholdQuota * bestD) - u.members;
-      const neededForNext = Math.max(1, neededMembersForNext);
+      let neededForNext;
+      if (isBoundary && !isWinner) {
+        neededForNext = 1;
+      } else {
+        const nextThresholdQuota = ombud + 0.5;
+        const minMembersForNext = Math.ceil(nextThresholdQuota * bestD);
+        neededForNext = Math.max(1, minMembersForNext - u.members);
+      }
 
       let dropMargin = null;
-      if (!isBaseMandate && ombud > minSeats) {
-        const dropThresholdQuota = ombud - 0.5;
-        const floorMembers = Math.floor(dropThresholdQuota * bestD);
-        dropMargin = Math.max(0, u.members - floorMembers);
+      if (ombud > minSeats) {
+        if (isBoundary && isWinner) {
+          dropMargin = 1;
+        } else {
+          const dropThresholdQuota = ombud - 0.5;
+          const minMembersToKeep = Math.ceil(dropThresholdQuota * bestD);
+          dropMargin = Math.max(0, u.members - minMembersToKeep + 1);
+        }
       }
 
       return {
         id: u.id,
         name: u.name,
         members: u.members,
-        shareMembers: totalMembers > 0 ? (u.members / totalMembers) * 100 : 0,
-        rawQuota,
+        shareMembers: totalMembers > 0 ? Number(((u.members / totalMembers) * 100).toFixed(2)) : 0,
+        shareOmbud: 0,
+        rawQuota: Number(rawQuota.toFixed(4)),
+        roundedQuota: naturalSeats,
         ombud,
         isBaseMandate,
+        isTied: isBoundary,
+        isLotteryWinner: isWinner,
         neededForNext,
         dropMargin
       };
     });
 
+    unitResults.forEach(r => {
+      r.shareOmbud = currentTotal > 0 ? Number(((r.ombud / currentTotal) * 100).toFixed(2)) : 0;
+    });
+
     return {
-      divisor: bestD,
-      divisorMin: dMin,
-      divisorMax: dMax,
+      results: unitResults,
       totalMembers,
-      totalOmbud: allocatedTotal,
+      totalOmbud: currentTotal,
       targetSeats,
       minSeats,
-      isExactMatch: allocatedTotal === targetSeats,
+      divisor: Number(bestD.toFixed(4)),
+      divisorMin: Number(dIntervalMin.toFixed(4)),
+      divisorMax: Number(dIntervalMax.toFixed(4)),
       baseMandateUnitsCount: baseMandateCount,
-      results: unitResults
+      isExactMatch: currentTotal === targetSeats,
+      hasTie,
+      tiedUnitIds,
+      lotteryWinnerIds,
+      seatsToDistribute
     };
   }
 
@@ -297,7 +544,7 @@
         r.shareMembers.toFixed(2).replace('.', ','),
         r.rawQuota.toFixed(2).replace('.', ','),
         r.ombud,
-        r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat',
+        r.isLotteryWinner ? 'Kvotmandat (Lottning)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat'),
         r.neededForNext,
         r.dropMargin !== null ? r.dropMargin : 'Skyddad'
       ]);
@@ -348,6 +595,7 @@
         .num { text-align: right; }
         .total-row { font-weight: bold; background-color: #f1f5f9; }
         .grundmandat { color: #b45309; font-weight: 600; }
+        .lottat { color: #6d28d9; font-weight: 600; }
       </style>
     </head>
     <body>
@@ -372,7 +620,7 @@
           <td class="num">${r.shareMembers.toFixed(2)}%</td>
           <td class="num">${r.rawQuota.toFixed(2)}</td>
           <td class="num" style="font-weight:bold;">${r.ombud}</td>
-          <td class="${r.isBaseMandate ? 'grundmandat' : ''}">${r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat'}</td>
+          <td class="${r.isLotteryWinner ? 'lottat' : (r.isBaseMandate ? 'grundmandat' : '')}">${r.isLotteryWinner ? 'Kvotmandat (Lottning)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat')}</td>
           <td class="num">+${r.neededForNext}</td>
           <td class="num">${r.dropMargin !== null ? r.dropMargin : 'Skyddad'}</td>
         </tr>
@@ -408,7 +656,7 @@
       `${r.shareMembers.toFixed(2)}%`,
       r.rawQuota.toFixed(2),
       r.ombud,
-      r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat',
+      r.isLotteryWinner ? 'Kvotmandat (Lottning)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvotmandat'),
       `+${r.neededForNext}`,
       r.dropMargin !== null ? `${r.dropMargin}` : 'Skyddad'
     ].join('\t'));
@@ -432,7 +680,7 @@
     md += `| :--- | :--- | :---: | :---: | :---: | :---: | :--- | :---: | :---: |\n`;
 
     summary.results.forEach((r, idx) => {
-      md += `| ${idx + 1} | ${r.name} | ${r.members.toLocaleString('sv-SE')} | ${r.shareMembers.toFixed(2)}% | ${r.rawQuota.toFixed(2)} | **${r.ombud}** | ${r.isBaseMandate ? 'Grundmandat' : 'Kvot'} | +${r.neededForNext} | ${r.dropMargin !== null ? r.dropMargin : 'Skyddad'} |\n`;
+      md += `| ${idx + 1} | ${r.name} | ${r.members.toLocaleString('sv-SE')} | ${r.shareMembers.toFixed(2)}% | ${r.rawQuota.toFixed(2)} | **${r.ombud}** | ${r.isLotteryWinner ? 'Kvot (Lottat)' : (r.isBaseMandate ? 'Grundmandat' : 'Kvot')} | +${r.neededForNext} | ${r.dropMargin !== null ? r.dropMargin : 'Skyddad'} |\n`;
     });
 
     md += `| **TOTALT** | | **${summary.totalMembers.toLocaleString('sv-SE')}** | **100.00%** | | **${summary.totalOmbud}** | ${summary.baseMandateUnitsCount > 0 ? summary.baseMandateUnitsCount + ' grundmandat' : 'Samtliga kvot'} | | |\n`;
@@ -484,8 +732,11 @@
         muf: { targetSeats: 101, minSeats: 2 },
         msu: { targetSeats: 51, minSeats: 1 },
         mst: { targetSeats: 51, minSeats: 0 },
-        custom: { targetSeats: 100, minSeats: 1 }
+        custom: { targetSeats: 101, minSeats: 1 }
       };
+
+      this.manualTieWinners = { muf: [], msu: [], mst: [], custom: [] };
+      this.tieBreakSeed = 42;
 
       this.factions = this.loadFactions();
       this.districtFactions = this.loadDistrictFactions();
@@ -667,6 +918,7 @@
       this.pasteModal = document.getElementById('paste-modal');
       this.pasteTextarea = document.getElementById('paste-textarea');
       this.toastContainer = document.getElementById('toast-container');
+      this.tieBreakBanner = document.getElementById('tie-break-banner');
     }
 
     initEventListeners() {
@@ -874,7 +1126,11 @@
 
     getSummary() {
       const units = this.orgData[this.currentOrgKey] || [];
-      const cfg = this.customConfigs[this.currentOrgKey];
+      const cfg = {
+        ...this.customConfigs[this.currentOrgKey],
+        manualTieWinners: this.manualTieWinners[this.currentOrgKey] || [],
+        tieBreakSeed: this.tieBreakSeed
+      };
       return calculateOmbud(units, cfg);
     }
 
@@ -887,6 +1143,7 @@
       if (this.orgDescriptionEl) this.orgDescriptionEl.textContent = orgMeta.description;
 
       this.renderKPIs(summary, orgMeta);
+      this.renderTieBreakBanner(summary);
       this.renderTableOnly();
       this.renderMarginalList(summary);
       this.renderFactionAnalysis(summary);
@@ -897,6 +1154,66 @@
       }
     }
 
+    renderTieBreakBanner(summary) {
+      if (!this.tieBreakBanner) return;
+
+      if (!summary.hasTie) {
+        this.tieBreakBanner.classList.add('hidden');
+        this.tieBreakBanner.innerHTML = '';
+        return;
+      }
+
+      this.tieBreakBanner.classList.remove('hidden');
+
+      const tiedUnits = summary.results.filter(r => r.isTied);
+      const winnerUnits = summary.results.filter(r => r.isLotteryWinner);
+      const tiedNames = tiedUnits.map(r => `<strong>${escapeHtml(r.name)}</strong>`).join(', ');
+      const winnerNames = winnerUnits.map(r => `<strong>${escapeHtml(r.name)}</strong>`).join(', ');
+      const quotaStr = summary.divisor > 0 && tiedUnits.length > 0 ? tiedUnits[0].rawQuota.toFixed(2) : '2,50';
+
+      this.tieBreakBanner.innerHTML = `
+        <div class="apple-glass-card border-l-4 border-violet-500 p-4 mb-4 bg-violet-50/70 shadow-sm space-y-3">
+          <div class="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 text-violet-700 font-bold text-xs shadow-xs">🎲</span>
+                <h4 class="text-sm font-bold text-slate-900">Lika rösttal vid gränsen – Mandatfördelning avgjord genom lottning</h4>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                <strong>${tiedUnits.length} distrikt</strong> (${tiedNames}) har exakt samma röstkvot (<strong>${quotaStr}</strong> vid divisor ${summary.divisor.toFixed(2)}) för ${summary.seatsToDistribute === 1 ? 'det sista återstående mandatet' : `${summary.seatsToDistribute} återstående mandat`} upp till målramen <strong>${summary.targetSeats} ombud</strong>. Enligt Vallagen (14 kap. 3 §) och stadgepraxis avgörs företrädet genom <strong>lottning</strong>.
+              </p>
+              <div class="text-xs font-semibold text-violet-900 pt-1 flex items-center gap-2 flex-wrap">
+                <span>Vinnare av lotten (+1 ombud): ${winnerNames || 'Ingen'}</span>
+                <span class="text-slate-400">•</span>
+                <span>Övriga bundna enheter: ${summary.minSeats > 0 ? `${summary.minSeats} ombud (grundmandat)` : 'oförändrat'}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 self-center">
+              <button id="btn-reroll-tie" class="px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-violet-600 hover:bg-violet-700 shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="dices" class="w-3.5 h-3.5"></i>
+                <span>Lotta om</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const rerollBtn = this.tieBreakBanner.querySelector('#btn-reroll-tie');
+      if (rerollBtn) {
+        rerollBtn.addEventListener('click', () => {
+          this.tieBreakSeed = Date.now();
+          this.manualTieWinners[this.currentOrgKey] = [];
+          this.render();
+          this.showToast('Ny lottning genomförd!');
+          if (typeof confetti === 'function') {
+            try {
+              confetti({ particleCount: 45, spread: 55, origin: { y: 0.4 } });
+            } catch(e) {}
+          }
+        });
+      }
+    }
+
     renderKPIs(summary, orgMeta) {
       if (this.totalMembersEl) this.totalMembersEl.textContent = summary.totalMembers.toLocaleString('sv-SE');
       if (this.totalOmbudEl) this.totalOmbudEl.textContent = summary.totalOmbud;
@@ -904,7 +1221,9 @@
       if (this.targetSeatsBadgeEl) {
         if (summary.isExactMatch) {
           this.targetSeatsBadgeEl.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0 whitespace-nowrap inline-flex items-center gap-1';
-          this.targetSeatsBadgeEl.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Exakt ram (${summary.targetSeats} mål)`;
+          this.targetSeatsBadgeEl.innerHTML = summary.hasTie
+            ? `<i data-lucide="dices" class="w-3 h-3 text-violet-600"></i> Exakt ram (${summary.targetSeats} mål • Lottat)`
+            : `<i data-lucide="check" class="w-3 h-3"></i> Exakt ram (${summary.targetSeats} mål)`;
         } else {
           this.targetSeatsBadgeEl.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0 whitespace-nowrap inline-flex items-center gap-1';
           this.targetSeatsBadgeEl.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3"></i> Diff (${summary.totalOmbud} / ${summary.targetSeats})`;
@@ -958,7 +1277,9 @@
         const tr = document.createElement('tr');
 
         let statusBadge = '';
-        if (r.isBaseMandate) {
+        if (r.isLotteryWinner) {
+          statusBadge = `<span class="status-badge lottat" title="Tilldelades mandat genom lottning vid lika rösttal"><i data-lucide="dices" class="w-3 h-3"></i> Kvot (Lottat)</span>`;
+        } else if (r.isBaseMandate) {
           statusBadge = `<span class="status-badge grundmandat" title="Mottog mandat via grundmandatsnivån (${summary.minSeats} st)"><i data-lucide="shield" class="w-3 h-3"></i> Grundmandat</span>`;
         } else if (r.ombud > 0) {
           statusBadge = `<span class="status-badge kvot" title="Kvalificerade proportionellt via röstkvot"><i data-lucide="check" class="w-3 h-3"></i> Kvotmandat</span>`;
@@ -1048,7 +1369,7 @@
             <td class="num font-mono"><strong>100.00%</strong></td>
             <td class="num font-mono"><strong>–</strong></td>
             <td class="num"><strong><span class="ombud-badge">${summary.totalOmbud}</span></strong></td>
-            <td><strong>${summary.baseMandateUnitsCount > 0 ? summary.baseMandateUnitsCount + ' på grundmandat' : 'Samtliga kvot'}</strong></td>
+            <td><strong>${summary.baseMandateUnitsCount > 0 ? summary.baseMandateUnitsCount + ' på grundmandat' : 'Samtliga kvot'}${summary.hasTie ? ` (${summary.seatsToDistribute} via lottning)` : ''}</strong></td>
             <td colspan="3"></td>
           </tr>
         `;

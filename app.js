@@ -15,8 +15,11 @@ class OmbudsApp {
       muf: { targetSeats: 101, minSeats: 2 },
       msu: { targetSeats: 51, minSeats: 1 },
       mst: { targetSeats: 51, minSeats: 0 },
-      custom: { targetSeats: 100, minSeats: 1 }
+      custom: { targetSeats: 101, minSeats: 1 }
     };
+
+    this.manualTieWinners = { muf: [], msu: [], mst: [], custom: [] };
+    this.tieBreakSeed = 42;
 
     this.factions = this.loadFactions();
     this.districtFactions = this.loadDistrictFactions();
@@ -198,6 +201,7 @@ class OmbudsApp {
     this.pasteModal = document.getElementById('paste-modal');
     this.pasteTextarea = document.getElementById('paste-textarea');
     this.toastContainer = document.getElementById('toast-container');
+    this.tieBreakBanner = document.getElementById('tie-break-banner');
   }
 
   initEventListeners() {
@@ -405,7 +409,11 @@ class OmbudsApp {
 
   getSummary() {
     const units = this.orgData[this.currentOrgKey] || [];
-    const cfg = this.customConfigs[this.currentOrgKey];
+    const cfg = {
+      ...this.customConfigs[this.currentOrgKey],
+      manualTieWinners: this.manualTieWinners[this.currentOrgKey] || [],
+      tieBreakSeed: this.tieBreakSeed
+    };
     return calculateOmbud(units, cfg);
   }
 
@@ -418,6 +426,7 @@ class OmbudsApp {
     if (this.orgDescriptionEl) this.orgDescriptionEl.textContent = orgMeta.description;
 
     this.renderKPIs(summary, orgMeta);
+    this.renderTieBreakBanner(summary);
     this.renderTableOnly();
     this.renderMarginalList(summary);
     this.renderFactionAnalysis(summary);
@@ -428,6 +437,66 @@ class OmbudsApp {
     }
   }
 
+  renderTieBreakBanner(summary) {
+    if (!this.tieBreakBanner) return;
+
+    if (!summary.hasTie) {
+      this.tieBreakBanner.classList.add('hidden');
+      this.tieBreakBanner.innerHTML = '';
+      return;
+    }
+
+    this.tieBreakBanner.classList.remove('hidden');
+
+    const tiedUnits = summary.results.filter(r => r.isTied);
+    const winnerUnits = summary.results.filter(r => r.isLotteryWinner);
+    const tiedNames = tiedUnits.map(r => `<strong>${escapeHtml(r.name)}</strong>`).join(', ');
+    const winnerNames = winnerUnits.map(r => `<strong>${escapeHtml(r.name)}</strong>`).join(', ');
+    const quotaStr = summary.divisor > 0 && tiedUnits.length > 0 ? tiedUnits[0].rawQuota.toFixed(2) : '2,50';
+
+    this.tieBreakBanner.innerHTML = `
+      <div class="apple-glass-card border-l-4 border-violet-500 p-4 mb-4 bg-violet-50/70 shadow-sm space-y-3">
+        <div class="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 text-violet-700 font-bold text-xs shadow-xs">🎲</span>
+              <h4 class="text-sm font-bold text-slate-900">Lika rösttal vid gränsen – Mandatfördelning avgjord genom lottning</h4>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              <strong>${tiedUnits.length} distrikt</strong> (${tiedNames}) har exakt samma röstkvot (<strong>${quotaStr}</strong> vid divisor ${summary.divisor.toFixed(2)}) för ${summary.seatsToDistribute === 1 ? 'det sista återstående mandatet' : `${summary.seatsToDistribute} återstående mandat`} upp till målramen <strong>${summary.targetSeats} ombud</strong>. Enligt Vallagen (14 kap. 3 §) och stadgepraxis avgörs företrädet genom <strong>lottning</strong>.
+            </p>
+            <div class="text-xs font-semibold text-violet-900 pt-1 flex items-center gap-2 flex-wrap">
+              <span>Vinnare av lotten (+1 ombud): ${winnerNames || 'Ingen'}</span>
+              <span class="text-slate-400">•</span>
+              <span>Övriga bundna enheter: ${summary.minSeats > 0 ? `${summary.minSeats} ombud (grundmandat)` : 'oförändrat'}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0 self-center">
+            <button id="btn-reroll-tie" class="px-3.5 py-1.5 rounded-full text-xs font-bold text-white bg-violet-600 hover:bg-violet-700 shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer">
+              <i data-lucide="dices" class="w-3.5 h-3.5"></i>
+              <span>Lotta om</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const rerollBtn = this.tieBreakBanner.querySelector('#btn-reroll-tie');
+    if (rerollBtn) {
+      rerollBtn.addEventListener('click', () => {
+        this.tieBreakSeed = Date.now();
+        this.manualTieWinners[this.currentOrgKey] = [];
+        this.render();
+        this.showToast('Ny lottning genomförd!');
+        if (typeof confetti === 'function') {
+          try {
+            confetti({ particleCount: 45, spread: 55, origin: { y: 0.4 } });
+          } catch(e) {}
+        }
+      });
+    }
+  }
+
   renderKPIs(summary, orgMeta) {
     if (this.totalMembersEl) this.totalMembersEl.textContent = summary.totalMembers.toLocaleString('sv-SE');
     if (this.totalOmbudEl) this.totalOmbudEl.textContent = summary.totalOmbud;
@@ -435,7 +504,9 @@ class OmbudsApp {
     if (this.targetSeatsBadgeEl) {
       if (summary.isExactMatch) {
         this.targetSeatsBadgeEl.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0 whitespace-nowrap inline-flex items-center gap-1';
-        this.targetSeatsBadgeEl.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Exakt ram (${summary.targetSeats} mål)`;
+        this.targetSeatsBadgeEl.innerHTML = summary.hasTie
+          ? `<i data-lucide="dices" class="w-3 h-3 text-violet-600"></i> Exakt ram (${summary.targetSeats} mål • Lottat)`
+          : `<i data-lucide="check" class="w-3 h-3"></i> Exakt ram (${summary.targetSeats} mål)`;
       } else {
         this.targetSeatsBadgeEl.className = 'text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0 whitespace-nowrap inline-flex items-center gap-1';
         this.targetSeatsBadgeEl.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3"></i> Diff (${summary.totalOmbud} / ${summary.targetSeats})`;
@@ -489,7 +560,9 @@ class OmbudsApp {
       const tr = document.createElement('tr');
 
       let statusBadge = '';
-      if (r.isBaseMandate) {
+      if (r.isLotteryWinner) {
+        statusBadge = `<span class="status-badge lottat" title="Tilldelades mandat genom lottning vid lika rösttal"><i data-lucide="dices" class="w-3 h-3"></i> Kvot (Lottat)</span>`;
+      } else if (r.isBaseMandate) {
         statusBadge = `<span class="status-badge grundmandat" title="Mottog mandat via grundmandatsnivån (${summary.minSeats} st)"><i data-lucide="shield" class="w-3 h-3"></i> Grundmandat</span>`;
       } else if (r.ombud > 0) {
         statusBadge = `<span class="status-badge kvot" title="Kvalificerade proportionellt via röstkvot"><i data-lucide="check" class="w-3 h-3"></i> Kvotmandat</span>`;
@@ -579,7 +652,7 @@ class OmbudsApp {
           <td class="num font-mono"><strong>100.00%</strong></td>
           <td class="num font-mono"><strong>–</strong></td>
           <td class="num"><strong><span class="ombud-badge">${summary.totalOmbud}</span></strong></td>
-          <td><strong>${summary.baseMandateUnitsCount > 0 ? summary.baseMandateUnitsCount + ' på grundmandat' : 'Samtliga kvot'}</strong></td>
+          <td><strong>${summary.baseMandateUnitsCount > 0 ? summary.baseMandateUnitsCount + ' på grundmandat' : 'Samtliga kvot'}${summary.hasTie ? ` (${summary.seatsToDistribute} via lottning)` : ''}</strong></td>
           <td colspan="3"></td>
         </tr>
       `;

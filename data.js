@@ -125,7 +125,7 @@ export const ORG_CONFIGS = {
     shortName: 'Egen stämma',
     assemblyName: 'Stämma / Årsmöte',
     unitTypeLabel: 'Enhet / Förening',
-    targetSeats: 100,
+    targetSeats: 101,
     minSeats: 1,
     thresholdFormula: 'max(min_grundmandat, round(M / D))',
     description: 'Valfri organisation med fullt anpassningsbara parametrar.',
